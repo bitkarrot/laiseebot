@@ -3,7 +3,7 @@ Telegram Bot for LN Laisees
 
 # commands list
 - **/help** - get help commands, and a welcome message on how to use the bot
-- **/start** - automatically creates a wallet on LNBITS with LNURLp extension. automatically creates a lnaddress with format of username@laisee.org, based on the telegram username. LN address cannot be changed once in play. [ lnbits url, tg username data stored on supabase]
+- **/start** - automatically creates a wallet on LNBITS with LNURLp extension. automatically creates a lnaddress with format of username@laisee.org, based on the telegram username. LN address cannot be changed once in play. [ lnbits url, tg username data stored on supabase] - i don't know if this is too much of if we should let the LN address be an option later. Also if the user stops the bot, and restarts, it should not recreate, just do a db look up. 
 
 ## Laisee Functions
 - **/image** - select an laisee image or upload your own to send and personalize 
