@@ -1,2 +1,46 @@
 # laiseebot
-bot for LN Laisees
+Telegram Bot for LN Laisees
+
+# commands list
+/help - get help commands, and a welcome message on how to use the bot
+
+/start - automatically creates a wallet on LNBITS with LNURLp extension. automatically creates a lnaddress with format of <username>@laisee.org, based on the telegram username. LN address cannot be changed once in play. [ lnbits url, tg username data stored on supabase]
+
+## Laisee Functions
+/image - select an laisee image to send and personalize 
+/spin - daily spins to win sats to your wallet, the more laisees you send, the higher chance to win sats from the giveaway pool 
+/sats - what daily exchange rate is between sats to hkd and usd
+
+## transactions
+/laisee - /laisee <amt> username, Sends a laisee to another, has sub menu pick image/msg
+
+/send - /send <amt> username or LN address, just sends regular sats as normal
+/receive - /receive <amt> or <any amt> , shows QR code for receiving sats
+/refill - /refill <amt> to wallet via LN invoice, what if they only have BTC layer 1?
+
+
+## create LN address [ on start ]
+/lnaddress - view your ln address, email submenu option to add an email forwarder
+
+## lndhub extension
+/lndhub - get LNDHUB invoice url or admin url [admin, invoice sub command]
+
+## lnurlP extension
+- see fill command above, sub commands to set 
+    * amount: 100- 100000 sat
+    * accepts commments
+    * on success: display message 
+    * dispatches webhook to : <<>>
+
+## wallet functionality on lnbits
+/balance - get current wallet balance on lnbits
+/withdraw - get LNURL Withdraw QR code to drain wallet
+/export - export wallet to Phone with QR Code
+/rename - rename wallet on lnbits
+/lnbits - get lnbits url so user can access interface directly
+
+## exit functionality
+/delete - deletes LNBITS wallet, LN Email address and stops the bot, 
+adds warning of any sats that are left in wallet will be donated. 
+
+
