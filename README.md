@@ -40,4 +40,24 @@ cannot send to user if they don't have a telegram account, notify user their rec
     * on success: display message 
     * dispatches webhook to : <<>>
 
+========
 
+## DEV TODO LIST
+
+- 1) [Infrastructure] pylnbits module - clean up test cases and add missing methods to access lnbits
+    * https://github.com/lightningames/pylnbits.git
+
+- 2) [Infrastructure] Supabase -  
+    * Write a Module - db access for records, use curl methods as current library is incomplete
+    * Data to Store: Name, Username, LN Address, LNBits url, Email Address Forwarder (optional)
+
+- 3) [FrontEnd] Telegram: Stitch above together with Telegram bot menu and methods
+
+- 4) [Infrastructure] LN Addresses: GitPython module
+    * to add LN Address entries to website by updating git repo. 
+    * current website has .well-known enabled
+ 
+- 5) [FrontEnd] Web framerwork: https://laisee-test.vercel.app/
+    * can be easily extended in future to embed lnbits functions
+    * demo site has email magic link and simple profile setup: name, email, avatar, website
+    * data on supabase

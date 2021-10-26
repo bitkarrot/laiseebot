@@ -1,5 +1,4 @@
 from pycoingecko import CoinGeckoAPI
-from decimal import Decimal
 from constants import currencylist
 import time
 

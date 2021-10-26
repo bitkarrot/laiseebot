@@ -11,6 +11,23 @@ import os
 import time
 from datetime import datetime
 
+# basic framework for telegram bot 
+'''
+- **/balance** - get current wallet balance on lnbits
+- **/withdraw** - get LNURL Withdraw QR code to drain wallet
+
+- **/send** - /send <amt> username or LN address, just sends regular sats as normal
+- **/receive** - /receive <amt> or <any amt> , shows QR code for receiving sats
+- **/refill** - /refill <amt> to wallet via LN invoice, what if they only have BTC layer 1?
+
+- **/lndhub** - get LNDHUB invoice url or admin url [admin, invoice sub command]
+- **/export** - export wallet to Phone with QR Code Image
+- **/rename** - rename wallet on lnbits
+- **/lnbits** - get lnbits url so user can access interface directly
+
+'''
+
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logging.getLogger('telethon').setLevel(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -39,7 +56,6 @@ h = logging.handlers.RotatingFileHandler(log_path, encoding='utf-8', maxBytes=5 
 h.setFormatter(logging.Formatter("%(asctime)s\t%(levelname)s:%(message)s"))
 h.setLevel(level)
 logger.addHandler(h)
-
 ###################################
 
 TOKEN = config['bot_token']
@@ -78,6 +94,8 @@ async def handler(event):
         await event.reply(msg)
         return 1
 
+    # fix this so that its pattern matching beginning of string
+    # also convert to buttons to make it easier
     if '/helpme' in rawtext:
         await event.reply(intro)
         
