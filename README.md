@@ -56,7 +56,17 @@ cannot send to user if they don't have a telegram account, notify user their rec
 
 2) [Infrastructure] Supabase -  
     * Write a Module - db access for records, use curl methods as current library is incomplete
-    * Data to Store: TG Username, LN Address, LNBits url, Email Address (tied to auth on supabase), optional avatar, optional website, these last two were part of the demo from supabase so inherited properties, can remove anytime, esp if avatar images run out of space on data bucket. 
+    * Data to Store: 
+      - TG Username
+      - LN Address (username@domain.com)
+      - LNBits url (e.g. https://bits.bitcoin.org.hk/lnurlp/?usr=XXXXXXX)
+      - invoice_key (lnbits, needed for send/receive/lookup functions)
+      - admin_key (lnbits, needed to enable extensions and create lnurlp, used with LN Addresses) 
+      - Email Address (tied to auth on supabase, accessible via web interface)
+      - optional avatar (web interface)
+      - optional website. (web interface) 
+
+   [ These last two columns were part of the demo from supabase so inherited properties, can remove anytime, esp if avatar images run out of space on data bucket.]  
 
 3) [FrontEnd] Telegram: Stitch above together with Telegram bot menu and methods
 
