@@ -5,7 +5,7 @@ Telegram Bot for LN Laisees
 - **/help** - get help commands, and a welcome message on how to use the bot
 - **/start** - automatically creates a wallet on LNBITS with LNURLp extension. automatically creates a lnaddress with format of username@laisee.org, based on the telegram username. LN address cannot be changed once in play. [ lnbits url, tg username data stored on supabase] - i don't know if this is too much of if we should let the LN address be an option later. Also if the user stops the bot, and restarts, it should not recreate, just do a db look up. 
 
-## Laisee Functions
+## LaiseeBot Functions
 - **/image** - select an laisee image or upload your own to send and personalize 
 - **/spin** - daily spins to win sats to your wallet, the more laisees you send, the higher chance to win sats from the giveaway pool 
 - **/sats** - what daily exchange rate is between sats to hkd and usd
@@ -18,7 +18,7 @@ cannot send to user if they don't have a telegram account, notify user their rec
 - **/refill** - /refill <amt> to wallet via LN invoice, what if they only have BTC layer 1?
 
 ## create LN address [ on start ]
-- **/lnaddress** - view your ln address, email submenu option to add an email forwarder
+- **/lnaddress** - view your ln address, email submenu option to add an email forwarder [WARNING: if end user modifies metadata on lnbits, the LN address needs to be updated on github, these two are connected. ]
 
 ## lndhub extension
 - **/lndhub** - get LNDHUB invoice url or admin url [admin, invoice sub command]
