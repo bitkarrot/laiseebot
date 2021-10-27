@@ -55,7 +55,7 @@ cannot send to user if they don't have a telegram account, notify user their rec
 
 2) [Infrastructure] Supabase -  
     * Write a Module - db access for records, use curl methods as current library is incomplete
-    * Data to Store: TG Username, LN Address, LNBits url, Email Address (tied to auth on supabase), optional avatar, optional website
+    * Data to Store: TG Username, LN Address, LNBits url, Email Address (tied to auth on supabase), optional avatar, optional website, these last two were part of the demo from supabase so inherited properties, can remove anytime, esp if avatar images run out of space on data bucket. 
 
 3) [FrontEnd] Telegram: Stitch above together with Telegram bot menu and methods
 
