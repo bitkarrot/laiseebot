@@ -19,22 +19,22 @@ Telegram Bot for LN Laisees
 
 ## transactions
 - **/laisee** - /laisee <amt> username, Sends a laisee to another, has sub menu pick image/msg. 
-cannot send to user if they don't have a telegram account, notify user their recipient needs to start a conversation in order to receive their gift. 
+   cannot send to user if they don't have a telegram account,
+   notify user their recipient needs to start a conversation in order to receive their gift. 
+   
 - **/send** - /send <amt> username or LN address, just sends regular sats as normal
 - **/receive** - /receive <amt> or <any amt> , shows QR code for receiving sats
-- **/refill** - /refill <amt> to wallet via LN invoice, what if they only have BTC layer 1?
+   
 
 ## create LN address [ on start ]
 - **/lnaddress** - view your ln address, email submenu option to add an email forwarder [WARNING: if end user modifies metadata on lnbits, the LN address needs to be updated on github, these two are connected. ]
 
 ## lndhub extension
-- **/lndhub** - get LNDHUB invoice url or admin url [admin, invoice sub command]
+- **/lndhub** or **/bluewallet** - get LNDHUB invoice url or admin url [admin, invoice sub command] that can be used w/external wallet
 
 ## wallet functionality on lnbits
 - **/balance** - get current wallet balance on lnbits
 - **/withdraw** - get LNURL Withdraw QR code to drain wallet
-- **/export** - export wallet to Phone with QR Code
-- **/rename** - rename wallet on lnbits
 - **/lnbits** - get lnbits url so user can access interface directly
 
 ## exit functionality - main wallet on lnbits
