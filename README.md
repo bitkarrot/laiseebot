@@ -37,7 +37,7 @@ cannot send to user if they don't have a telegram account, notify user their rec
 - **/lnbits** - get lnbits url so user can access interface directly
 
 ## exit functionality - main wallet on lnbits
-- **/delete** - deletes LNBITS wallet, LN Email address and stops the bot, adds warning of any sats that are left in wallet will be donated. 
+- **/delete** - deletes LNBITS wallet, address and stops the bot, adds warning of any sats that are left in wallet will be donated/deleted.
 
 ## lnurlP extension on lnbits
 - see fill command above, metadata for LN address that must be synced between lnbits and github are below:
@@ -55,7 +55,7 @@ cannot send to user if they don't have a telegram account, notify user their rec
 
 2) [Infrastructure] Supabase -  
     * Write a Module - db access for records, use curl methods as current library is incomplete
-    * Data to Store: Name, Username, LN Address, LNBits url, Email Address Forwarder (optional)
+    * Data to Store: TG Username, LN Address, LNBits url, Email Address (tied to auth on supabase), optional avatar, optional website
 
 3) [FrontEnd] Telegram: Stitch above together with Telegram bot menu and methods
 
@@ -65,5 +65,5 @@ cannot send to user if they don't have a telegram account, notify user their rec
  
 5) [FrontEnd] Web framerwork: https://laisee-test.vercel.app/
     * can be easily extended in future to embed lnbits functions
-    * demo site has email magic link and simple profile setup: name, email, avatar, website
+    * demo site has email magic link and simple profile setup: telegram username, email, avatar, website
     * data on supabase
