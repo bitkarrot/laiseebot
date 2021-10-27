@@ -3,7 +3,13 @@ Telegram Bot for LN Laisees
 
 # commands list
 - **/help** - get help commands, and a welcome message on how to use the bot
-- **/start** - automatically creates a wallet on LNBITS with LNURLp extension. automatically creates a lnaddress with format of username@laisee.org, based on the telegram username. LN address cannot be changed once in play. [ lnbits url, tg username data stored on supabase] - i don't know if this is too much of if we should let the LN address be an option later. Also if the user stops the bot, and restarts, it should not recreate, just do a db look up. 
+- **/start** - automatically creates a wallet on LNBITS with LNURLp extension. 
+> * Automatically creates a lnaddress with format of username@laisee.org, based on the telegram username. 
+> * LN address cannot be changed once in play. [ lnbits url, tg username data stored on supabase] -
+> * Issue 1: Should let the LN address be an option later or should we have it as default?
+> * Issue 2: Also if the user stops the bot, and restarts, it should not recreate, just do a db look up. 
+> * Issue 3: How do we connect this with the front end where the user registers with their email? Do we offer this as a paid service? e.g. XXX sats for a forwarder enabled.
+
 
 ## LaiseeBot Functions
 - **/image** - select an laisee image or upload your own to send and personalize 
@@ -34,7 +40,7 @@ cannot send to user if they don't have a telegram account, notify user their rec
 - **/delete** - deletes LNBITS wallet, LN Email address and stops the bot, adds warning of any sats that are left in wallet will be donated. 
 
 ## lnurlP extension on lnbits
-- see fill command above, sub commands to set are below:
+- see fill command above, metadata for LN address that must be synced between lnbits and github are below:
     * amount: 100- 100000 sat
     * accepts commments
     * on success: display message 
