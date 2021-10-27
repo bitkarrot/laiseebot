@@ -7,8 +7,9 @@ Telegram Bot for LN Laisees
 > * Automatically creates a lnaddress with format of username@laisee.org, based on the telegram username. 
 > * LN address cannot be changed once in play. [ lnbits url, tg username data stored on supabase] -
 > * Issue 1: Should let the LN address be an option later or should we have it as default?
-> * Issue 2: Also if the user stops the bot, and restarts, it should not recreate, just do a db look up. 
-> * Issue 3: How do we connect this with the front end where the user registers with their email? Do we offer this as a paid service? e.g. XXX sats for a forwarder enabled.
+> * Issue 2: If the user stops the bot, and restarts, it should not recreate, just do a db look up. 
+> * Issue 3: How do we connect this with the front end where the user registers with their email? 
+> Do we offer this as a paid service? e.g. XXX sats for a forwarder enabled. forwarders must be manually enabled on fastmail, requires human intervention. 
 
 
 ## LaiseeBot Functions
