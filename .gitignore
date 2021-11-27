@@ -143,3 +143,5 @@ orderbook_config.yml
 env2supabase-py
 .DS_Store
 stash.*
+node_modules
+laisee-frontpage
