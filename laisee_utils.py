@@ -140,8 +140,8 @@ async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
         if os.path.isfile(new_path):
             # TODO asynchronous subprocess, handle exceptions if git cannot be reached.
             now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S%Z")  
-            subprocess.run(['git', 'add', telegram_name + " added: " + now ], cwd=git_repo_path)
-            subprocess.run(['git', 'commit', '-m', "Add " + telegram_name], cwd=git_repo_path)
+            subprocess.run(['git', 'add', telegram_name ], cwd=git_repo_path)
+            subprocess.run(['git', 'commit', '-m', "Add " + telegram_name + " added: " + now], cwd=git_repo_path)
             subprocess.run(['git', 'push'], cwd=git_repo_path)
             return True
 
@@ -196,7 +196,7 @@ async def create_laisee_user(telegram_name: str, config, session: ClientSession,
     laisee_email: str = telegram_name + "@laisee.org"
     passkey: str = os.environ.get("PASSKEY")
     random_password = passkey
-    user = supabase.auth.sign_up(email=laisee_email, password=random_password)
+    user = supabase.auth.sign_up(email=laisee_email, password=random_password, phone=None)
     print(f'Sign up new user: {user} \n')
     # check for timeout error here or failure to create, then skip rest b/c no uuid
 

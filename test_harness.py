@@ -9,15 +9,12 @@ from pylnbits.user_wallet import UserWallet
 from laisee_utils import get_laisee_user, create_laisee_user, delete_laisee_user
 from laisee_utils import check_supauser_exists, create_lnaddress, delete_lnaddress, get_lnbits_link
 
-# TG menu
-# get wallet balance - done
-# top up wallet, via lnaddress, invoice QR, lnurl
-# Send laisee to tg user, OR create withdraw QR single/bulk
 # check transactions. (receiving, there are no websockets, cron pull?)
 
 async def main():
     # setup application 
     # master key for creating accounts
+    # run node update_git.cjs -p to pull down laisee-frontpage repo 
     # git clone https://github.com/bitkarrot/laisee-frontpage.git
     
     masterc = Config(config_file="config.yml")
