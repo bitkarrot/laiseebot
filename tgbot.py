@@ -53,9 +53,9 @@ client = TelegramClient(config["session_name"],
 # Default to another parse mode
 client.parse_mode = 'html'
 
-lang = 'en'
-menu = get_topmenu(lang)
-info = get_info_msgs(lang)
+global_lang = 'en'
+info = get_info_msgs(global_lang)
+menu = get_topmenu(global_lang)
 
 
 @client.on(events.NewMessage(pattern='(?i)/start', forwards=False, outgoing=False))
@@ -73,15 +73,10 @@ async def alerthandler(event):
             [Button.text(menu['settings'], resize=True, single_use=True),
             Button.text(menu['help'], resize=True, single_use=True)],])
     
-@client.on(events.NewMessage(pattern='(?i)/quit', forwards=False, outgoing=False))
-async def alerthandler(event):
-    sender = await event.get_sender()
-    print(f'getting sender username: {sender.username}')
-    await client.delete_dialog(sender.username)
-
 
 @client.on(events.CallbackQuery())
 async def callback(event):
+
     query_name = event.data.decode()
     print(f"callback: " + query_name)
     await event.edit('Thank you for clicking {}!'.format(query_name))
@@ -96,6 +91,10 @@ async def callback(event):
         msg = sats_convert(query_name)
         await event.reply(msg)
 
+    setlang = menu['toolopts'][2] # todo toggle global language
+    if setlang == query_name:
+        await event.reply(setlang)
+        
 
 @events.register(events.NewMessage(incoming=True, outgoing=False))
 async def handler(event):
@@ -154,6 +153,14 @@ async def handler(event):
     if ('/btc' in input) or ('/sats' in input) or ('/fiat' in input): 
         msg = sats_convert(input)
         await event.reply(msg)
+
+
+
+@client.on(events.NewMessage(pattern='(?i)/quit', forwards=False, outgoing=False))
+async def alerthandler(event):
+    sender = await event.get_sender()
+    print(f'getting sender username: {sender.username}')
+    await client.delete_dialog(sender.username)
 
 
 

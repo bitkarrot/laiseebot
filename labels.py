@@ -8,7 +8,7 @@ en_menu = {'topup':'Top Up Wallet',
             'topopts': ['Lightning Address', 'QR Code', 'LNURL'], 
             'setopts': ['Lnbits Url', 'Withdraw', 'Delete Wallet'],
             'sendopts': ['Telegram User', 'Image', 'Print Bulk QR'], 
-            'toolopts': ['Get Rates','Convert $₿⚡️', 'Set Language'] }
+            'toolopts': ['Get Rates','Convert $₿⚡️'] }
 
 cn_menu = {'topup':'....', 
             'send': '...',
