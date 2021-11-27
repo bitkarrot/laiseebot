@@ -1,8 +1,9 @@
 # from requests.sessions import merge_setting
-from labels import get_info_msgs, get_topmenu
+from labels import get_info_msgs, get_topmenu, lightning_address_info
 from constants import core_currency
 
 from telethon import TelegramClient, events, Button
+
 import yaml
 import logging
 from logging import handlers
@@ -13,7 +14,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logging.getLogger('telethon').setLevel(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-bot_commands = ["<b>/balance</b> \t\t - gets wallet balance\n",
+bot_commands = ["<b>/start</b>\t\t - start bot and create wallet",
+                "<b>/balance</b> \t\t - gets wallet balance\n",
                 "<b>/topup </b> \t\t - top up wallet",
                 "<b>/send </b> - options to send sats\t\t",
                 "<b>/rates</b> \t\t - Get latest BTC to Fiat Rates from Coingecko\n",
@@ -53,9 +55,9 @@ client = TelegramClient(config["session_name"],
 # Default to another parse mode
 client.parse_mode = 'html'
 
-global_lang = 'en'
-info = get_info_msgs(global_lang)
-menu = get_topmenu(global_lang)
+lang = 'en'
+info = get_info_msgs(lang)
+menu = get_topmenu(lang)
 
 
 @client.on(events.NewMessage(pattern='(?i)/start', forwards=False, outgoing=False))
@@ -76,12 +78,47 @@ async def alerthandler(event):
 
 @client.on(events.CallbackQuery())
 async def callback(event):
-
+    sender = await event.get_sender()
     query_name = event.data.decode()
     print(f"callback: " + query_name)
     await event.edit('Thank you for clicking {}!'.format(query_name))
 
+    lang = 'en'
+    menu = get_topmenu(lang)
+
+    ### Top Up ###
+
+    if query_name == 'Lightning Address':
+        msg = "\n\nYour Lightning Address is <b> " + str(sender.username) + "@laisee.org</b> and is Case Sensitive. \n\n"
+        msg = msg + "To check if the address is active: https://sendsats.to/qr/" + sender.username + "@laisee.org\n\n"
+        msg = msg + ''.join(lightning_address_info)
+        await event.reply(msg)
+    
+    if query_name == 'QR Code':
+        msg = 'qr code'
+        await event.reply(msg)
+    
+    if query_name == 'LNURL':
+        msg = 'lnurl'
+        await event.reply(msg)
+
+
+    ### settings ###
+    if query_name == 'Delete Wallet':
+        delete_msg = "OK, Deleting everything! Sorry to see you go. If you want to recreate your wallet anytime just type /start"
+        await event.edit(delete_msg, buttons=[Button.text('Bye!', resize=True, single_use=True)])
+    
+    if query_name == 'Lnbits Url':
+        msg = ""
+        await event.reply(msg)
+
+    if query_name == 'Withdraw':
+        msg = ""
+        await event.reply(msg)
+
+
     ###### Tools ######
+    print(menu['toolopts'])
     rates = menu['toolopts'][0]
     if rates == query_name:
         msg = get_btcrates()
@@ -90,10 +127,6 @@ async def callback(event):
     if convert == query_name:
         msg = sats_convert(query_name)
         await event.reply(msg)
-
-    setlang = menu['toolopts'][2] # todo toggle global language
-    if setlang == query_name:
-        await event.reply(setlang)
         
 
 @events.register(events.NewMessage(incoming=True, outgoing=False))
@@ -137,7 +170,7 @@ async def handler(event):
         await client.send_message(event.sender_id, msg)
 
 
-    #################################### 
+    ##### Help , Tools ############
 
     if menu['help'] == input:
         msg = info['help']
@@ -155,13 +188,14 @@ async def handler(event):
         await event.reply(msg)
 
 
-
-@client.on(events.NewMessage(pattern='(?i)/quit', forwards=False, outgoing=False))
+'''
+@client.on(events.NewMessage(pattern='/quit', forwards=False, outgoing=False))
 async def alerthandler(event):
     sender = await event.get_sender()
     print(f'getting sender username: {sender.username}')
-    await client.delete_dialog(sender.username)
-
+    msg = " Ok Bye!"
+    await event.edit(msg, buttons=[ Button.text(menu['help'], resize=True, single_use=True)])
+'''
 
 
 #### start bot ####

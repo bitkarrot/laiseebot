@@ -142,3 +142,4 @@ orderbook_config.yml
 .env
 env2supabase-py
 .DS_Store
+stash.*
