@@ -12,7 +12,7 @@ Telegram Bot for LN Laisees
 
 ## LaiseeBot Functions
 - **/image** - select an laisee image or upload your own to send and personalize 
-- **/sats** - what daily exchange rate is between sats to hkd and usd
+- **/rates** - what daily exchange rate is between sats to hkd and usd
 
 ## transactions
 - **/laisee** - /laisee <amt> username, Sends a laisee to another, has sub menu pick image/msg. 
