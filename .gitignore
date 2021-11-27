@@ -140,4 +140,5 @@ logfile
 orderbook_config.yml
 *~
 .env
-env2
+env2supabase-py
+.DS_Store

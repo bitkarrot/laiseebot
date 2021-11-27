@@ -1,43 +1,28 @@
 # from requests.sessions import merge_setting
+from labels import get_info_msgs, get_topmenu
+from constants import core_currency
+
 from telethon import TelegramClient, events, Button
 import yaml
 import logging
 from logging import handlers
-import datetime as dt
 from coingecko_ticker import get_btcrates, sats_convert
-from constants import core_currency
-
-import os
-import time
-from datetime import datetime
-
-# basic framework for telegram bot 
-'''
-- **/balance** - get current wallet balance on lnbits
-- **/withdraw** - get LNURL Withdraw QR code to drain wallet
-
-- **/send** - /send <amt> username or LN address, just sends regular sats as normal
-- **/receive** - /receive <amt> or <any amt> , shows QR code for receiving sats
-- **/refill** - /refill <amt> to wallet via LN invoice, what if they only have BTC layer 1?
-
-- **/lndhub** - get LNDHUB invoice url or admin url [admin, invoice sub command]
-- **/export** - export wallet to Phone with QR Code Image
-- **/rename** - rename wallet on lnbits
-- **/lnbits** - get lnbits url so user can access interface directly
-
-'''
-
+from tg_utils import get_buttons, split
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logging.getLogger('telethon').setLevel(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-bot_commands = ["<b>/btc</b> \t\t - Ex: /btc 0.04 USD\n",
+bot_commands = ["<b>/balance</b> \t\t - gets wallet balance\n",
+                "<b>/topup </b> \t\t - top up wallet",
+                "<b>/send </b> - options to send sats\t\t",
                 "<b>/rates</b> \t\t - Get latest BTC to Fiat Rates from Coingecko\n",
-                "<b>/helpme</b> \t\t - Prints this list. \n\n"]
+                "<b>/withdraw</b> \t\t - withdraw funds to external wallet\n", 
+                "<b>/lnbits </b> \t\t - fetches the lnbits link to your account"
+                "<b>/help</b> \t\t - Prints this list. \n\n"]
 
 cmds = "".join(bot_commands)
-help_msg = "Here are the commands I currently am enslaved to: \n\n" + cmds
+help_msg = "Here are my commands: \n\n" + cmds
 header_msg = '<b>Lightning Laisee</b>\n\n'
 intro = header_msg + help_msg
 
@@ -68,45 +53,109 @@ client = TelegramClient(config["session_name"],
 # Default to another parse mode
 client.parse_mode = 'html'
 
+lang = 'en'
+menu = get_topmenu(lang)
+info = get_info_msgs(lang)
+
+
 @client.on(events.NewMessage(pattern='(?i)/start', forwards=False, outgoing=False))
-async def new_handler(event):
-    await event.reply('Hi! Go to /helpme for instructions')
+async def alerthandler(event):
+    sender = await event.get_sender()
+    print(sender)
+    print(f'getting sender username: {sender.username}')
+
+    msg = info['welcome']
+    await client.send_message(event.sender_id, msg, buttons=[
+            [Button.text(menu['topup'], resize=True, single_use=True),
+            Button.text(menu['send'], resize=True, single_use=True)],
+            [Button.text(menu['balance'], resize=True, single_use=True),
+            Button.text(menu['tools'], resize=True, single_use=True)], 
+            [Button.text(menu['settings'], resize=True, single_use=True),
+            Button.text(menu['help'], resize=True, single_use=True)],])
+    
+@client.on(events.NewMessage(pattern='(?i)/quit', forwards=False, outgoing=False))
+async def alerthandler(event):
+    sender = await event.get_sender()
+    print(f'getting sender username: {sender.username}')
+    await client.delete_dialog(sender.username)
+
+
+@client.on(events.CallbackQuery())
+async def callback(event):
+    query_name = event.data.decode()
+    print(f"callback: " + query_name)
+    await event.edit('Thank you for clicking {}!'.format(query_name))
+
+    ###### Tools ######
+    rates = menu['toolopts'][0]
+    if rates == query_name:
+        msg = get_btcrates()
+        await event.reply(msg)
+    convert = menu['toolopts'][1]
+    if convert == query_name:
+        msg = sats_convert(query_name)
+        await event.reply(msg)
 
 
 @events.register(events.NewMessage(incoming=True, outgoing=False))
 async def handler(event):
+
     input = str(event.raw_text)
     sender = await event.get_sender()
     username = sender.username
-    rawtext = event.raw_text
     chatid = event.chat_id
     logger.info(f"handler: {input}, by @{username} in chatid: {chatid}")
-    
-    '''
-    if chatid != allowed_chatrooms:
-        msg = 'Sorry you are not part of the club! Please join the chatroom to use.'
-        await event.reply(msg)
-        return 1
-    '''
-    
+        
     if username is None:
-        msg = 'Please set a username in telegram in order use this bot.'
+        msg = info['username']
         await event.reply(msg)
         return 1
 
-    # fix this so that its pattern matching beginning of string
-    # also convert to buttons to make it easier
-    if '/helpme' in rawtext:
-        await event.reply(intro)
-        
-    if '/rates' in rawtext:
-        msg = get_btcrates()
+    if menu['topup'] == input:
+        msg =  info['topup']
+        topup = menu['topopts']
+        topup_buttons = get_buttons(topup)
+        topupsplit = split(topup_buttons, 1)
+        await client.send_message(event.sender_id, msg, buttons=topupsplit)
+
+    if menu['settings'] == input:
+        msg = info['settings']
+        settings = menu['setopts']
+        set_buttons = get_buttons(settings)
+        set_split = split(set_buttons, 1)
+        await client.send_message(event.sender_id, msg, buttons=set_split)
+
+    if menu['send'] == input: 
+        msg = info['send']
+        send_options = menu['sendopts']
+        send_buttons = get_buttons(send_options)
+        send_split = split(send_buttons, 1)
+
+        await client.send_message(event.sender_id, msg, buttons=send_split)
+
+    if menu['balance'] == input:
+        msg = info['wallet']
+        await client.send_message(event.sender_id, msg)
+
+
+    #################################### 
+
+    if menu['help'] == input:
+        msg = info['help']
+        await client.send_message(event.sender_id, msg)
+
+    if menu['tools'] == input:
+        msg = info['tools']
+        tool_options = menu['toolopts']
+        tool_buttons = get_buttons(tool_options)
+        tool_split = split(tool_buttons, 1)
+        await client.send_message(event.sender_id, msg, buttons=tool_split)
+
+    if ('/btc' in input) or ('/sats' in input) or ('/fiat' in input): 
+        msg = sats_convert(input)
         await event.reply(msg)
-    
-    if '/btc' in rawtext:
-        msg = sats_convert(rawtext)
-        await event.reply(msg)    
-    
+
+
 
 #### start bot ####
 client.start(bot_token=TOKEN)
