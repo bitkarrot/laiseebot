@@ -20,26 +20,26 @@ from local_config import LConfig
 # here we assume git repo already cloned and in current working dir
 # rewrite subprocess commits with simplegit in node.js, 
 # python-git not suitable for long running processes
-git_repo_path = "./laisee-frontpage/public/.well-known/lnurlp/"
+git_repo_path = "../laisee-frontpage/public/.well-known/lnurlp/"
 
 
-async def activate_url(url: str):
-    async with ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status == 200: 
-                return True
-            else: 
-                return False
+async def activate_url(url: str, session):
+    # async with ClientSession() as session:
+    async with session.get(url) as response:
+        if response.status == 200: 
+            return True
+        else: 
+            return False
 
 
-async def activate_extensions(url: str, user_id: str): 
+async def activate_extensions(url: str, user_id: str, session: ClientSession ): 
     # Post activate extension for user_id
     extension_list = ['lnurlp', 'withdraw','lndhub']
     tasks = []
     for i in extension_list:
         exturl = url + "/extensions?usr=" + user_id + "&enable="  + i
         print(f'enable extension: {exturl}')
-        task = asyncio.ensure_future(activate_url(exturl))
+        task = asyncio.ensure_future(activate_url(exturl, session))
         tasks.append(task)
     result = await asyncio.wait(tasks)
     print(result)
@@ -59,9 +59,12 @@ async def create_new_lnbits(user_manager: UserManager, user_name: str, admin_id:
     print(f"User + Initial: created wallet: {created_status}\n")
     return created_status
 
-async def get_lnbits_link(wallet_config: LConfig, lnbits_url: str):
-    lnbits_link = lnbits_url + "/wallet?usr=" + wallet_config.user_id + "&wal=" + wallet_config.wallet_id
+
+# this method should be added to the wallet config LConfig and not here. 
+async def get_lnbits_link(wallet_config: LConfig):
+    lnbits_link = wallet_config.lnbits_url + "/wallet?usr=" + wallet_config.user_id + "&wal=" + wallet_config.wallet_id
     return lnbits_link
+
 
 async def check_supauser_exists(supabase: Client, telegram_name: str):
     user = supabase.table('profiles').select('*').eq('username', telegram_name).execute()
@@ -213,7 +216,7 @@ async def create_laisee_user(telegram_name: str, config, session: ClientSession,
         print(f'supabase_insert success')
 
     # activate LNbits extensions
-    result = await activate_extensions(lnbits_url, user_id)
+    result = await activate_extensions(lnbits_url, user_id, session)
     print(f'activate extensions result: {result}')
     lnbits_link = lnbits_url + "/wallet?usr=" + user_id
     print(lnbits_link)

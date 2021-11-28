@@ -1,6 +1,13 @@
 # from requests.sessions import merge_setting
 from labels import get_info_msgs, get_topmenu, lightning_address_info
-from constants import core_currency
+
+from aiohttp.client import ClientSession
+from local_config import LConfig
+from supabase import create_client, Client
+import os
+from pylnbits.config import Config
+from pylnbits.user_wallet import UserWallet
+from client_methods import create_user, delete_user, get_balance
 
 from telethon import TelegramClient, events, Button
 
@@ -9,24 +16,21 @@ import logging
 from logging import handlers
 from coingecko_ticker import get_btcrates, sats_convert
 from tg_utils import get_buttons, split
+from constants import core_currency
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logging.getLogger('telethon').setLevel(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-bot_commands = ["<b>/start</b>\t\t - start bot and create wallet",
-                "<b>/balance</b> \t\t - gets wallet balance\n",
-                "<b>/topup </b> \t\t - top up wallet",
-                "<b>/send </b> - options to send sats\t\t",
-                "<b>/rates</b> \t\t - Get latest BTC to Fiat Rates from Coingecko\n",
-                "<b>/withdraw</b> \t\t - withdraw funds to external wallet\n", 
-                "<b>/lnbits </b> \t\t - fetches the lnbits link to your account"
-                "<b>/help</b> \t\t - Prints this list. \n\n"]
-
-cmds = "".join(bot_commands)
-help_msg = "Here are my commands: \n\n" + cmds
-header_msg = '<b>Lightning Laisee</b>\n\n'
-intro = header_msg + help_msg
+############# logfile ############
+level = logging.INFO
+logger.setLevel(level)
+log_path = "./logfile"
+h = logging.handlers.RotatingFileHandler(log_path, encoding='utf-8', maxBytes=5 * 1024 * 1024, backupCount=5)
+h.setFormatter(logging.Formatter("%(asctime)s\t%(levelname)s:%(message)s"))
+h.setLevel(level)
+logger.addHandler(h)
+###################################
 
 path  = "./"
 config_file = path + 'config.yml'
@@ -34,16 +38,6 @@ with open(config_file, 'rb') as f:
     config = yaml.safe_load(f)
 f.close()
 
-
-############# logfile ############
-level = logging.INFO
-logger.setLevel(level)
-log_path = path + "logfile"
-h = logging.handlers.RotatingFileHandler(log_path, encoding='utf-8', maxBytes=5 * 1024 * 1024, backupCount=5)
-h.setFormatter(logging.Formatter("%(asctime)s\t%(levelname)s:%(message)s"))
-h.setLevel(level)
-logger.addHandler(h)
-###################################
 
 TOKEN = config['bot_token']
 logger.info(f'Bot Token: {TOKEN}')
@@ -60,11 +54,30 @@ info = get_info_msgs(lang)
 menu = get_topmenu(lang)
 
 
+masterc = Config(config_file="config.yml")
+supa_url: str = os.environ.get("SUPABASE_URL")
+supa_key: str = os.environ.get("SUPABASE_KEY")
+supabase: Client = create_client(supa_url, supa_key)
+wallet_config = masterc # initial config
+
+
+async def get_user(telegram_name):
+    async with ClientSession() as session:
+        wallet_config = await create_user(telegram_name, masterc, supabase, session)
+        return wallet_config
+
+async def del_user(wallet_config):
+    async with ClientSession() as session:
+        del_result = await delete_user(wallet_config, masterc, supabase, session)
+        print(f'Deletion result: {del_result}')
+
+
 @client.on(events.NewMessage(pattern='(?i)/start', forwards=False, outgoing=False))
 async def alerthandler(event):
     sender = await event.get_sender()
     print(sender)
-    print(f'getting sender username: {sender.username}')
+    telegram_name = sender.username
+    print(f'getting sender username: {telegram_name}')
 
     msg = info['welcome']
     await client.send_message(event.sender_id, msg, buttons=[
@@ -74,6 +87,8 @@ async def alerthandler(event):
             Button.text(menu['tools'], resize=True, single_use=True)], 
             [Button.text(menu['settings'], resize=True, single_use=True),
             Button.text(menu['help'], resize=True, single_use=True)],])
+    
+    # create or get user, return wallet_config
     
 
 @client.on(events.CallbackQuery())
@@ -87,7 +102,6 @@ async def callback(event):
     menu = get_topmenu(lang)
 
     ### Top Up ###
-
     if query_name == 'Lightning Address':
         msg = "\n\nYour Lightning Address is <b> " + str(sender.username) + "@laisee.org</b> and is Case Sensitive. \n\n"
         msg = msg + "To check if the address is active: https://sendsats.to/qr/" + sender.username + "@laisee.org\n\n"
@@ -107,22 +121,37 @@ async def callback(event):
     if query_name == 'Delete Wallet':
         delete_msg = "OK, Deleting everything! Sorry to see you go. If you want to recreate your wallet anytime just type /start"
         await event.edit(delete_msg, buttons=[Button.text('Bye!', resize=True, single_use=True)])
-    
+        
     if query_name == 'Lnbits Url':
-        msg = ""
+        msg = "clicked on lnbits url"
         await event.reply(msg)
 
     if query_name == 'Withdraw':
-        msg = ""
+        msg = "clicked on withdraw"
+        await event.reply(msg)
+
+    ### send laisee ###
+    if query_name == 'Telegram User':
+        msg = "clicked on Telegram User "
+        await event.reply(msg)
+
+    if query_name == 'Image':
+        msg = "clicked on 'Image' "
+        await event.reply(msg)
+
+    if query_name == 'Print Bulk QR':
+        msg = "clicked on 'Bulk QR' "
         await event.reply(msg)
 
 
+
     ###### Tools ######
-    print(menu['toolopts'])
+    # print(menu['toolopts'])
     rates = menu['toolopts'][0]
     if rates == query_name:
         msg = get_btcrates()
         await event.reply(msg)
+
     convert = menu['toolopts'][1]
     if convert == query_name:
         msg = sats_convert(query_name)

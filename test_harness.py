@@ -46,15 +46,17 @@ async def main():
         print(f'Your Wallet Balance: {balance} sats')
 
         # get lnbits link
-        lnbits_link = await get_lnbits_link(wallet_config, lnbits_url)
+        lnbits_link = await get_lnbits_link(wallet_config)
         print(f'Lnbits Link: {lnbits_link}')
 
         # create lightning address - done, addresses pushes to web in about 5 min
         # if it does not, check github repo if there was an error
+        print(f'==== CREATE LN ADDRESS ==== ')
         lnresult = await create_lnaddress(session, wallet_config)
         print(f"Lightning Address creation result: { lnresult }")
     
         # delete lightning address
+        print(f'==== DELETE LN ADDRESS ==== ')
         lnresult = await delete_lnaddress(session, wallet_config)
         print(f'lightning address deleted: { lnresult }')
 
