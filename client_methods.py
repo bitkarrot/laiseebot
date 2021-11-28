@@ -55,7 +55,7 @@ async def create_user(telegram_name: str, masterc: Config, supabase: Client, ses
     return wallet_config
     
  
-async def get_balance(user_wallet: str):
+async def get_balance(user_wallet: UserWallet):
     # get wallet details (todo parse)
     walletinfo = await user_wallet.get_wallet_details()
     balance = walletinfo['balance']
