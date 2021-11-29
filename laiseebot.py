@@ -1,12 +1,12 @@
 # from requests.sessions import merge_setting
-from labels import get_info_msgs, get_topmenu, lightning_address_info
+from labels import get_info_msgs, get_topmenu, get_lnaddress_info
 
 from aiohttp.client import ClientSession
-from local_config import LConfig
 from supabase import create_client, Client
 import os
 from pylnbits.config import Config
 from pylnbits.user_wallet import UserWallet
+from local_config import LConfig
 from client_methods import create_user, delete_user, get_balance
 
 from telethon import TelegramClient, events, Button
@@ -37,8 +37,6 @@ config_file = path + 'config.yml'
 with open(config_file, 'rb') as f:
     config = yaml.safe_load(f)
 f.close()
-
-
 TOKEN = config['bot_token']
 logger.info(f'Bot Token: {TOKEN}')
 
@@ -53,12 +51,11 @@ lang = 'en'
 info = get_info_msgs(lang)
 menu = get_topmenu(lang)
 
-
 masterc = Config(config_file="config.yml")
 supa_url: str = os.environ.get("SUPABASE_URL")
 supa_key: str = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(supa_url, supa_key)
-wallet_config = masterc # initial config
+wallet_config = masterc # master config
 
 
 async def get_user(telegram_name):
@@ -72,22 +69,42 @@ async def del_user(wallet_config):
         print(f'Deletion result: {del_result}')
 
 
+async def check_user_exists(username):
+    # check if username exists in telegram
+    from telethon.tl.functions.users import GetFullUserRequest
+    try: 
+        full = await client(GetFullUserRequest(username))
+        print('telegram user check, should return same username')
+        exists = full.user.username
+        if username == exists:
+            return True
+        else: 
+            return False
+    except ValueError as e: 
+        return e
+
+
 @client.on(events.NewMessage(pattern='(?i)/start', forwards=False, outgoing=False))
 async def alerthandler(event):
     sender = await event.get_sender()
-    print(sender)
+    username = sender.username
+
+    if username is None:
+        msg = info['username']
+        await event.reply(msg)
+        return 1
+
     telegram_name = sender.username
     print(f'getting sender username: {telegram_name}')
 
     msg = info['welcome']
     await client.send_message(event.sender_id, msg, buttons=[
-            [Button.text(menu['topup'], resize=True, single_use=True),
-            Button.text(menu['send'], resize=True, single_use=True)],
-            [Button.text(menu['balance'], resize=True, single_use=True),
-            Button.text(menu['tools'], resize=True, single_use=True)], 
-            [Button.text(menu['settings'], resize=True, single_use=True),
-            Button.text(menu['help'], resize=True, single_use=True)],])
-    
+            [Button.text(menu['topup'], resize=True, single_use=False),
+            Button.text(menu['send'], resize=True, single_use=False)],
+            [Button.text(menu['balance'], resize=True, single_use=False),
+            Button.text(menu['tools'], resize=True, single_use=False)], 
+            [Button.text(menu['settings'], resize=True, single_use=False),
+            Button.text(menu['help'], resize=True, single_use=False)]])
     # create or get user, return wallet_config
     
 
@@ -98,14 +115,11 @@ async def callback(event):
     print(f"callback: " + query_name)
     await event.edit('Thank you for clicking {}!'.format(query_name))
 
-    lang = 'en'
-    menu = get_topmenu(lang)
-
     ### Top Up ###
     if query_name == 'Lightning Address':
         msg = "\n\nYour Lightning Address is <b> " + str(sender.username) + "@laisee.org</b> and is Case Sensitive. \n\n"
         msg = msg + "To check if the address is active: https://sendsats.to/qr/" + sender.username + "@laisee.org\n\n"
-        msg = msg + ''.join(lightning_address_info)
+        msg = msg + ''.join(get_lnaddress_info(lang))
         await event.reply(msg)
     
     if query_name == 'QR Code':
@@ -144,7 +158,6 @@ async def callback(event):
         await event.reply(msg)
 
 
-
     ###### Tools ######
     # print(menu['toolopts'])
     rates = menu['toolopts'][0]
@@ -166,11 +179,6 @@ async def handler(event):
     username = sender.username
     chatid = event.chat_id
     logger.info(f"handler: {input}, by @{username} in chatid: {chatid}")
-        
-    if username is None:
-        msg = info['username']
-        await event.reply(msg)
-        return 1
 
     if menu['topup'] == input:
         msg =  info['topup']
@@ -200,7 +208,6 @@ async def handler(event):
 
 
     ##### Help , Tools ############
-
     if menu['help'] == input:
         msg = info['help']
         await client.send_message(event.sender_id, msg)
@@ -215,16 +222,6 @@ async def handler(event):
     if ('/btc' in input) or ('/sats' in input) or ('/fiat' in input): 
         msg = sats_convert(input)
         await event.reply(msg)
-
-
-'''
-@client.on(events.NewMessage(pattern='/quit', forwards=False, outgoing=False))
-async def alerthandler(event):
-    sender = await event.get_sender()
-    print(f'getting sender username: {sender.username}')
-    msg = " Ok Bye!"
-    await event.edit(msg, buttons=[ Button.text(menu['help'], resize=True, single_use=True)])
-'''
 
 
 #### start bot ####
