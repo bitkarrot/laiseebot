@@ -9,15 +9,10 @@ from pylnbits.config import Config
 from pylnbits.user_wallet import UserWallet
 
 from laisee_utils import get_laisee_user, create_laisee_user, delete_laisee_user
-from laisee_utils import check_supauser_exists, create_lnaddress, delete_lnaddress, get_lnbits_link
+from laisee_utils import check_supauser_exists, create_lnaddress, delete_lnaddress
 
 
 async def delete_user(wallet_config: LConfig, masterc: Config, supabase: Client, session: ClientSession):
-    # master config required for LNBits deletion
-    print(f'==============DELETE LIGHTNING ADDRESS==================')
-    lnresult = await delete_lnaddress(session, wallet_config)
-    print(f'lightning address deleted: { lnresult }')
-
     # delete user from lnbits, supabase
     print(f'==== DELETE LAISEE USER from LNbits and Supabase ====')
     data,res =  await delete_laisee_user(wallet_config, masterc, supabase)
@@ -26,10 +21,18 @@ async def delete_user(wallet_config: LConfig, masterc: Config, supabase: Client,
     if data['status_code'] == 200:
         suparesult = True
     lnbitsresult  = bool(res)
-    result = [lnresult, suparesult, lnbitsresult]
+
+        # master config required for LNBits deletion
+    '''
+    print(f'==============DELETE LIGHTNING ADDRESS==================')
+    lnresult = await delete_lnaddress(session, wallet_config)
+    print(f'lightning address deleted: { lnresult }')
+    '''
+    # result = [lnresult, suparesult, lnbitsresult]
+    result = [ suparesult, lnbitsresult]
     # parse data, res lnresult, and return 1 unified result
     return result
-        
+
 
 async def create_user(telegram_name: str, masterc: Config, supabase: Client, session: ClientSession):
     # if user exists, don't create new user
@@ -44,17 +47,29 @@ async def create_user(telegram_name: str, masterc: Config, supabase: Client, ses
         user_wallet = await create_laisee_user(telegram_name, masterc, session, supabase)
 
     wallet_config = user_wallet.config
-    print(wallet_config.lnbits_url)
-
+    print(f'lnbits_url: {wallet_config.lnbits_url}')
+    '''
     print(f'==============CREATE LIGHTNING ADDRESS==================')
     # create lightning address - done, addresses pushes to web in about 5 min
     # if it does not, check github repo if there was an error
     lnresult = await create_lnaddress(session, wallet_config)
     print(f"Lightning Address creation result: { lnresult }")
-    
+    '''
     return wallet_config
-    
+
+
+async def get_user(telegram_name: str, masterc: Config, supabase: Client):
+    user = await check_supauser_exists(supabase, telegram_name)
+    # check supabase DB for user, if none, then create new
+    if user:
+        print(f'==== GET LAISEE USER from LNbits and Supabase ====')
+        wallet_config = await get_laisee_user(telegram_name, supabase, masterc.lnbits_url)
+        return wallet_config
+    else:
+        return None
  
+
+
 async def get_balance(user_wallet: UserWallet):
     # get wallet details (todo parse)
     walletinfo = await user_wallet.get_wallet_details()
@@ -65,7 +80,6 @@ async def get_balance(user_wallet: UserWallet):
 
 
 '''
-
 async def main():
     async with ClientSession() as session:
 
@@ -82,7 +96,7 @@ async def main():
         balance = await get_balance(user_wallet)
         print(f'balance from wallet: {balance}')  
 
-        lnbits_link = await get_lnbits_link(wallet_config)
+        lnbits_link = await wallet_config.get_lnbits_link()
         print(f'Lnbits Link: {lnbits_link}')
 
         del_result = await delete_user(wallet_config, masterc, supabase, session)

@@ -60,10 +60,6 @@ async def create_new_lnbits(user_manager: UserManager, user_name: str, admin_id:
     return created_status
 
 
-# this method should be added to the wallet config LConfig and not here. 
-async def get_lnbits_link(wallet_config: LConfig):
-    lnbits_link = wallet_config.lnbits_url + "/wallet?usr=" + wallet_config.user_id + "&wal=" + wallet_config.wallet_id
-    return lnbits_link
 
 
 async def check_supauser_exists(supabase: Client, telegram_name: str):
@@ -95,7 +91,7 @@ async def create_supauser(supabase: Client, lnbits_data: dict, uuid: str):
 
 async def get_supauser_data(supabase: Client, username: str): 
     data = supabase.table('profiles').select('*').eq('username', username).execute()
-    print(f"select result: { data }")
+    # print(f"select result: { data }")
     return data
 
 
@@ -240,7 +236,7 @@ async def create_laisee_user(telegram_name: str, config, session: ClientSession,
 
 async def get_laisee_user(telegram_name: str, supabase: Client, lnbits_url: str):
     user_data = await get_supauser_data(supabase, telegram_name)
-    print(f'Supabase user data : {user_data} ') 
+    # print(f'Supabase user data : {user_data} ') 
     user_invoicekey = user_data['data'][0]['invoice_key']
     user_adminkey = user_data['data'][0]['admin_key']
     user_id = user_data['data'][0]['lnbits_user_id'] 
@@ -258,6 +254,7 @@ async def get_laisee_user(telegram_name: str, supabase: Client, lnbits_url: str)
                             lnaddress=lnaddress,
                             telegram=telegram_name,
                             uuid=uuid)
+    
     return wallet_config
  
 

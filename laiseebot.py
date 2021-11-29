@@ -6,8 +6,9 @@ from supabase import create_client, Client
 import os
 from pylnbits.config import Config
 from pylnbits.user_wallet import UserWallet
+from pylnbits.lndhub import LndHub
 from local_config import LConfig
-from client_methods import create_user, delete_user, get_balance
+from client_methods import create_user, delete_user, get_user
 
 from telethon import TelegramClient, events, Button
 
@@ -58,15 +59,21 @@ supabase: Client = create_client(supa_url, supa_key)
 wallet_config = masterc # master config
 
 
-async def get_user(telegram_name):
+async def bot_create_user(telegram_name):
     async with ClientSession() as session:
         wallet_config = await create_user(telegram_name, masterc, supabase, session)
         return wallet_config
+        
+async def bot_get_user(telegram_name):
+    wallet_config = await get_user(telegram_name, masterc, supabase)
+    return wallet_config
 
-async def del_user(wallet_config):
+
+async def bot_delete_user(wallet_config):
     async with ClientSession() as session:
         del_result = await delete_user(wallet_config, masterc, supabase, session)
         print(f'Deletion result: {del_result}')
+        return del_result
 
 
 async def check_user_exists(username):
@@ -106,6 +113,7 @@ async def alerthandler(event):
             [Button.text(menu['settings'], resize=True, single_use=False),
             Button.text(menu['help'], resize=True, single_use=False)]])
     # create or get user, return wallet_config
+    wallet_config = await bot_create_user(telegram_name)
     
 
 @client.on(events.CallbackQuery())
@@ -114,34 +122,56 @@ async def callback(event):
     query_name = event.data.decode()
     print(f"callback: " + query_name)
     await event.edit('Thank you for clicking {}!'.format(query_name))
+    telegram_name = str(sender.username)
+    global wallet_config
+    wallet_config = await bot_get_user(telegram_name)
+
 
     ### Top Up ###
     if query_name == 'Lightning Address':
-        msg = "\n\nYour Lightning Address is <b> " + str(sender.username) + "@laisee.org</b> and is Case Sensitive. \n\n"
+        msg = "\n\nYour Lightning Address is <b> " + telegram_name + "@laisee.org</b> and is Case Sensitive. \n\n"
         msg = msg + "To check if the address is active: https://sendsats.to/qr/" + sender.username + "@laisee.org\n\n"
         msg = msg + ''.join(get_lnaddress_info(lang))
         await event.reply(msg)
     
-    if query_name == 'QR Code':
+    if query_name == '/QRCode':
         msg = 'qr code'
         await event.reply(msg)
     
-    if query_name == 'LNURL':
+    if query_name == '/LNURL':
         msg = 'lnurl'
         await event.reply(msg)
 
 
     ### settings ###
     if query_name == 'Delete Wallet':
-        delete_msg = "OK, Deleting everything! Sorry to see you go. If you want to recreate your wallet anytime just type /start"
-        await event.edit(delete_msg, buttons=[Button.text('Bye!', resize=True, single_use=True)])
-        
+        msg = "OK, please give me a moment ....."
+        await event.edit(msg)
+
+        if wallet_config is not None:
+            userlink = await wallet_config.get_lnbits_link()
+            print(f'in Delete wallet, getting wallet config, lnbits link: {userlink}')
+            result = await bot_delete_user(wallet_config)
+            print(f'Result of deleting user: {result}')
+
+            delete_msg = "OK, Deleted everything! Sorry to see you go. If you want to recreate your wallet anytime just type /start"
+            await event.edit(delete_msg, buttons=[Button.text('Bye!', resize=True, single_use=True)])
+        else: 
+            delete_msg = "Having trouble deleting your wallet, please contact an admin via helpdesk"
+            await event.edit(delete_msg)
+            
+
     if query_name == 'Lnbits Url':
-        msg = "clicked on lnbits url"
+        link = await wallet_config.get_lnbits_link()
+        msg = f"This is your link to the LNBits interface:\n {link}"
         await event.reply(msg)
 
-    if query_name == 'Withdraw':
-        msg = "clicked on withdraw"
+    if query_name == 'LndHub':
+        lndhub = LndHub(wallet_config)
+        admin = lndhub.admin()
+        invoice = lndhub.invoice()
+        msg = "<< Add description on how to use LndHub here >> \n\n"
+        msg = msg + f"<b>LndHub Admin:</b> \n{admin} \n\n <b>LndHub Invoice:</b> \n{invoice}"
         await event.reply(msg)
 
     ### send laisee ###
@@ -159,7 +189,6 @@ async def callback(event):
 
 
     ###### Tools ######
-    # print(menu['toolopts'])
     rates = menu['toolopts'][0]
     if rates == query_name:
         msg = get_btcrates()
@@ -199,12 +228,17 @@ async def handler(event):
         send_options = menu['sendopts']
         send_buttons = get_buttons(send_options)
         send_split = split(send_buttons, 1)
-
         await client.send_message(event.sender_id, msg, buttons=send_split)
 
+
     if menu['balance'] == input:
-        msg = info['wallet']
-        await client.send_message(event.sender_id, msg)
+        if wallet_config is not None:
+            async with ClientSession() as session:
+                user_wallet = UserWallet(config=wallet_config, session=session)
+                walletinfo = await user_wallet.get_wallet_details()
+                balance = walletinfo['balance']
+                msg = f'Your Wallet Balance: {balance} sats'
+                await client.send_message(event.sender_id, msg)
 
 
     ##### Help , Tools ############

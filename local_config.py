@@ -60,6 +60,13 @@ class LConfig(Config):
     def wallet_id(self):
         return self._wallet_id
 
+    # this method should be added to the wallet config LConfig and not here. 
+    async def get_lnbits_link(self):
+        lnbits_link = self._lnbits_url + "/wallet?usr=" + self._user_id + "&wal=" + self._wallet_id
+        return lnbits_link
+
+
+    # todo: add toString() method
 
 
 if __name__ == "__main__":

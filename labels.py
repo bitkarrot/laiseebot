@@ -6,8 +6,8 @@ en_menu = {'topup':'Top Up Wallet',
             'tools': 'Tools',
             'help': 'Help', 
             'lang': 'Toggle 中文',
-            'topopts': ['Lightning Address', 'QR Code', 'LNURL'], 
-            'setopts': ['Lnbits Url', 'Withdraw', 'Delete Wallet'],
+            'topopts': ['Lightning Address', '/QRCode', '/LNURL'], 
+            'setopts': ['Lnbits Url', 'LndHub', 'Delete Wallet'],
             'sendopts': ['Telegram User', 'Image', 'Print Bulk QR'], 
             'toolopts': ['Get Rates','Convert $₿⚡️'] }
 
@@ -18,8 +18,8 @@ cn_menu = {'topup':'充值余额',
             'tools': '工具',
             'help': '得到帮助', 
             'lang': '切换 En',
-            'topopts': ['Lightning Address', 'QR Code', 'LNURL'], 
-            'setopts': ['Lnbits Url', 'Withdraw', 'Delete Wallet'],
+            'topopts': ['Lightning Address', '/QRCode', '/LNURL'], 
+            'setopts': ['Lnbits Url', 'LndHub', 'Delete Wallet'],
             'sendopts': ['Telegram User', 'Image', 'Print Bulk QR'], 
             'toolopts': ['Get Rates','Convert $₿⚡️']  }
 
