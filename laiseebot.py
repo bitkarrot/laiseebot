@@ -179,7 +179,7 @@ async def callback(event):
             await event.edit(delete_msg)
 
     if query_name == 'Defund Wallet':
-        # TODO create a lnurlw link + QR, if balance > 1
+        # creates a lnurlw link + QR, if balance > 1
         async with ClientSession() as session:
             user_wallet = UserWallet(config=wallet_config, session=session)
             walletinfo = await user_wallet.get_wallet_details()
@@ -196,6 +196,7 @@ async def callback(event):
                 link = wallet_config.lnbits_url + "/withdraw/" + withdraw_id
                 msg = f"Here is your withdraw link: {link}"
                 await event.reply(msg)
+                # TODO convert SVG to PNG for telegram delivery
                 svgimg = await withdraw.get_image_embed(withdraw_id)
                 print("\n\nSVG image: ", str(svgimg), "\n\n")
             else: 
