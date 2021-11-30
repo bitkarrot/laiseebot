@@ -2,4 +2,5 @@ Telethon==1.23.0
 pycoingecko==2.2.0
 PyYAML==5.4.1
 pylnbits==0.0.3
-git+git://github.com/bitkarrot/supabase-py.git@develop#egg=supabase
+git+git://github.com/bitkarrot/supabase-py.git@develop#egg=supabasepyqrcode==1.2.1
+pyqrcode==1.2.1pypng==0.0.21

@@ -10,6 +10,7 @@ from pylnbits.lnurl_p import LnurlPay
 
 from local_config import LConfig
 from client_methods import create_user, delete_user, get_user
+from laisee_utils import get_QRimg
 
 from telethon import TelegramClient, events, Button
 
@@ -149,9 +150,13 @@ async def callback(event):
             msg = "Here is the Top Up QR Code and LNURL.\n\n"
             msg = msg +  f"<b>Min Deposit:</b> {paylink['min']} sats\n<b>Max Deposit:</b> {paylink['max']} sats\n" 
             lnurl = paylink['lnurl']
-            msg = msg +  "\n\n" + lnurl
+            # TODO: Get QR code from here
+            qrimg = get_QRimg(telegram_name, lnurl)
+            msg = msg +  "\n" + "<b>Scan me to deposit!</b>"
             await event.reply(msg)
-        
+            print(qrimg)
+            await client.send_file(event.chat_id, qrimg, caption=lnurl)
+            #await client.send_file(event.chat_id, qrimg)
     ### settings ###
     if query_name == 'Delete Wallet':
         msg = "OK, please give me a moment ....."

@@ -13,6 +13,7 @@ from pylnbits.user_wallet import UserWallet
 from pylnbits.lnurl_p import LnurlPay
 from local_config import LConfig
 
+import pyqrcode
 
 # test user creation with pylnbits and supabase-py
 # laisee user = supabase + lnbits accounts
@@ -21,6 +22,21 @@ from local_config import LConfig
 # rewrite subprocess commits with simplegit in node.js, 
 # python-git not suitable for long running processes
 git_repo_path = "../laisee-frontpage/public/.well-known/lnurlp/"
+
+
+def get_QRimg(telegram: str, bolt11: str):
+    try:
+        tip_file = '/tmp/deposit_' + telegram + '.png'
+        print(f' tip file: { tip_file } ')
+        bolt11 = "LNURL1DP68GURN8GHJ7MRWVF5HGUEWDPSHQCTC9E5K7TMVDE6HYMRS9ASHQ6F0WCCJ7MRWW4EXCTE5X549WAUC"
+        qr = pyqrcode.create(bolt11) 
+        qr.png(tip_file, scale=3, module_color=[0,0,0,128], background=[0xff, 0xff, 0xff])
+        return tip_file
+    except Exception as e:
+        print(e)
+        return { 
+            "msg" : "Not a valid Lightning Address. Sorry!"
+        }
 
 
 async def activate_url(url: str, session):
@@ -60,8 +76,6 @@ async def create_new_lnbits(user_manager: UserManager, user_name: str, admin_id:
     return created_status
 
 
-
-
 async def check_supauser_exists(supabase: Client, telegram_name: str):
     user = supabase.table('profiles').select('*').eq('username', telegram_name).execute()
     if len(user['data']) == 0:
@@ -93,6 +107,7 @@ async def get_supauser_data(supabase: Client, username: str):
     data = supabase.table('profiles').select('*').eq('username', username).execute()
     # print(f"select result: { data }")
     return data
+
 
 async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
     try:
