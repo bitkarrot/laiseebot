@@ -7,6 +7,8 @@ import os
 from pylnbits.config import Config
 from pylnbits.user_wallet import UserWallet
 from pylnbits.lnurl_p import LnurlPay
+from pylnbits.lnurl_w import LnurlWithdraw
+
 
 from local_config import LConfig
 from client_methods import create_user, delete_user, get_user
@@ -157,6 +159,8 @@ async def callback(event):
             print(qrimg)
             await client.send_file(event.chat_id, qrimg, caption=lnurl)
             #await client.send_file(event.chat_id, qrimg)
+
+    
     ### settings ###
     if query_name == 'Delete Wallet':
         msg = "OK, please give me a moment ....."
@@ -176,8 +180,28 @@ async def callback(event):
 
     if query_name == 'Defund Wallet':
         # TODO create a lnurlw link + QR, if balance > 1
-        msg = f"Withdraw entire balance from wallet"
-        await event.reply(msg)
+        async with ClientSession() as session:
+            user_wallet = UserWallet(config=wallet_config, session=session)
+            walletinfo = await user_wallet.get_wallet_details()
+            balance = float(walletinfo['balance'])/1000
+            fee_min = 1
+            if balance > fee_min: # assume min for fees is 1
+                body = {"title": "WithdrawLink", "min_withdrawable": 1, 
+                "max_withdrawable": int(balance-fee_min), "uses": 1,
+                "wait_time":1, "is_unique": True}
+                withdraw = LnurlWithdraw(wallet_config, session)
+                res = await withdraw.create_withdrawlink(body)
+                # print(res)
+                withdraw_id = res['id']
+                link = wallet_config.lnbits_url + "/withdraw/" + withdraw_id
+                msg = f"Here is your withdraw link: {link}"
+                await event.reply(msg)
+                svgimg = await withdraw.get_image_embed(withdraw_id)
+                print("\n\nSVG image: ", str(svgimg), "\n\n")
+            else: 
+                msg = f'Balance is too small to create a withdraw link'
+                await event.reply(msg)
+
 
     ### send laisee ###
     if query_name == 'Telegram User':
