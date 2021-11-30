@@ -6,9 +6,9 @@ en_menu = {'topup':'Top Up Wallet',
             'tools': 'Tools',
             'help': 'Help', 
             'lang': 'Toggle 中文',
-            'topopts': ['Lightning Address', 'QRCode', 'LNURL'], 
-            'setopts': ['Lnbits Url', 'LndHub', 'Delete Wallet'],
-            'sendopts': ['Telegram User', 'Image', 'Print Bulk QR'], 
+            'topopts': ['Lightning Address', 'QRCode'], 
+            'setopts': ['Defund Wallet','Lnbits Url', 'Delete Wallet'],
+            'sendopts': ['Telegram User', 'Laisee Image'], 
             'toolopts': ['Get Rates','Convert $₿⚡️'] }
 
 

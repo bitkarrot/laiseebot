@@ -6,7 +6,8 @@ from supabase import create_client, Client
 import os
 from pylnbits.config import Config
 from pylnbits.user_wallet import UserWallet
-from pylnbits.lndhub import LndHub
+from pylnbits.lnurl_p import LnurlPay
+
 from local_config import LConfig
 from client_methods import create_user, delete_user, get_user
 
@@ -113,6 +114,8 @@ async def alerthandler(event):
             Button.text(menu['help'], resize=True, single_use=False)]])
     # create or get user, return wallet_config
     wallet_config = await bot_create_user(telegram_name)
+
+    # only use for testing
     userlink = await wallet_config.get_lnbits_link()
     await client.send_message(event.sender_id, userlink)
     
@@ -134,14 +137,21 @@ async def callback(event):
         await event.reply(msg)
     
     if query_name == 'QRCode':
-        msg = 'qr code'
-        await event.reply(msg)
-    
-    if query_name == 'LNURL':
-        msg = 'lnurl'
-        await event.reply(msg)
-
-
+        async with ClientSession() as session:
+            lnurlp = LnurlPay(wallet_config, session)   
+            body = {"description": "LN address for " + telegram_name,
+                    "amount": 10,
+                    "max": 10000,
+                    "min": 10,
+                    "comment_chars": 100}
+            paylink = await lnurlp.create_paylink(body=body)
+            print(str(paylink))
+            msg = "Here is the Top Up QR Code and LNURL.\n\n"
+            msg = msg +  f"<b>Min Deposit:</b> {paylink['min']} sats\n<b>Max Deposit:</b> {paylink['max']} sats\n" 
+            lnurl = paylink['lnurl']
+            msg = msg +  "\n\n" + lnurl
+            await event.reply(msg)
+        
     ### settings ###
     if query_name == 'Delete Wallet':
         msg = "OK, please give me a moment ....."
@@ -158,34 +168,27 @@ async def callback(event):
         else: 
             delete_msg = "Having trouble deleting your wallet, please contact an admin via helpdesk"
             await event.edit(delete_msg)
-            
+
+    if query_name == 'Defund Wallet':
+        # TODO create a lnurlw link + QR, if balance > 1
+        msg = f"Withdraw entire balance from wallet"
+        await event.reply(msg)
+
+    ### send laisee ###
+    if query_name == 'Telegram User':
+        # TODO /send <amt> @username
+        msg = "To send to another user, type `/send <<amt>> @username`"
+        await event.reply(msg)
+
+    if query_name == 'Laisee Image':
+        # TODO user gives Amount, message
+        msg = "clicked on 'Laisee Image' "
+        await event.reply(msg)
 
     if query_name == 'Lnbits Url':
         link = await wallet_config.get_lnbits_link()
         msg = f"This is your link to the LNBits interface:\n {link}"
         await event.reply(msg)
-
-    if query_name == 'LndHub':
-        lndhub = LndHub(wallet_config)
-        admin = lndhub.admin()
-        invoice = lndhub.invoice()
-        msg = "<< Add description on how to use LndHub here >> \n\n"
-        msg = msg + f"<b>LndHub Admin:</b> \n{admin} \n\n <b>LndHub Invoice:</b> \n{invoice}"
-        await event.reply(msg)
-
-    ### send laisee ###
-    if query_name == 'Telegram User':
-        msg = "clicked on Telegram User "
-        await event.reply(msg)
-
-    if query_name == 'Image':
-        msg = "clicked on 'Image' "
-        await event.reply(msg)
-
-    if query_name == 'Print Bulk QR':
-        msg = "clicked on 'Bulk QR' "
-        await event.reply(msg)
-
 
     ###### Tools ######
     rates = menu['toolopts'][0]

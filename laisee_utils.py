@@ -94,7 +94,6 @@ async def get_supauser_data(supabase: Client, username: str):
     # print(f"select result: { data }")
     return data
 
-
 async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
     try:
         # create ln address w/laisee_email

@@ -69,7 +69,6 @@ async def get_user(telegram_name: str, masterc: Config, supabase: Client):
         return None
  
 
-
 async def get_balance(user_wallet: UserWallet):
     # get wallet details (todo parse)
     walletinfo = await user_wallet.get_wallet_details()
