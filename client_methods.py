@@ -39,15 +39,15 @@ async def create_user(telegram_name: str, masterc: Config, supabase: Client, ses
     user = await check_supauser_exists(supabase, telegram_name)
     # check supabase DB for user, if none, then create new
     if user:
-        print(f'==== CREATE LAISEE USER from LNbits and Supabase ====')
+        print(f'==== GET LAISEE USER from LNbits and Supabase ====')
         wallet_config = await get_laisee_user(telegram_name, supabase, masterc.lnbits_url)
         user_wallet = UserWallet(config=wallet_config, session=session)
     else:
-        print(f'==== FETCTHING LAISEE USER from LNbits and Supabase ====')
+        print(f'==== CREATE LAISEE USER from LNbits and Supabase ====')
         user_wallet = await create_laisee_user(telegram_name, masterc, session, supabase)
 
     wallet_config = user_wallet.config
-    print(f'lnbits_url: {wallet_config.lnbits_url}')
+    # print(f'lnbits_url: {wallet_config.lnbits_url}')
     '''
     print(f'==============CREATE LIGHTNING ADDRESS==================')
     # create lightning address - done, addresses pushes to web in about 5 min

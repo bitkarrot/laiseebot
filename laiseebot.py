@@ -56,7 +56,6 @@ masterc = Config(config_file="config.yml")
 supa_url: str = os.environ.get("SUPABASE_URL")
 supa_key: str = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(supa_url, supa_key)
-wallet_config = masterc # master config
 
 
 async def bot_create_user(telegram_name):
@@ -123,9 +122,7 @@ async def callback(event):
     print(f"callback: " + query_name)
     await event.edit('Thank you for clicking {}!'.format(query_name))
     telegram_name = str(sender.username)
-    global wallet_config
     wallet_config = await bot_get_user(telegram_name)
-
 
     ### Top Up ###
     if query_name == 'Lightning Address':
@@ -208,6 +205,7 @@ async def handler(event):
     username = sender.username
     chatid = event.chat_id
     logger.info(f"handler: {input}, by @{username} in chatid: {chatid}")
+    wallet_config = await bot_get_user(username)
 
     if menu['topup'] == input:
         msg =  info['topup']
