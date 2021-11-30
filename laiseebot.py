@@ -113,6 +113,8 @@ async def alerthandler(event):
             Button.text(menu['help'], resize=True, single_use=False)]])
     # create or get user, return wallet_config
     wallet_config = await bot_create_user(telegram_name)
+    userlink = await wallet_config.get_lnbits_link()
+    await client.send_message(event.sender_id, userlink)
     
 
 @client.on(events.CallbackQuery())
@@ -131,11 +133,11 @@ async def callback(event):
         msg = msg + ''.join(get_lnaddress_info(lang))
         await event.reply(msg)
     
-    if query_name == '/QRCode':
+    if query_name == 'QRCode':
         msg = 'qr code'
         await event.reply(msg)
     
-    if query_name == '/LNURL':
+    if query_name == 'LNURL':
         msg = 'lnurl'
         await event.reply(msg)
 
@@ -234,8 +236,10 @@ async def handler(event):
             async with ClientSession() as session:
                 user_wallet = UserWallet(config=wallet_config, session=session)
                 walletinfo = await user_wallet.get_wallet_details()
-                balance = walletinfo['balance']
-                msg = f'Your Wallet Balance: {balance} sats'
+                await client.send_message(event.sender_id, str(walletinfo))
+
+                balance = float(walletinfo['balance'])/1000
+                msg = f'Your Wallet Balance: {str(balance)} sats'
                 await client.send_message(event.sender_id, msg)
 
 
