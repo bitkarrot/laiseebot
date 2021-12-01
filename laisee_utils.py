@@ -28,7 +28,6 @@ def get_QRimg(telegram: str, bolt11: str):
     try:
         tip_file = '/tmp/deposit_' + telegram + '.png'
         print(f' tip file: { tip_file } ')
-        bolt11 = "LNURL1DP68GURN8GHJ7MRWVF5HGUEWDPSHQCTC9E5K7TMVDE6HYMRS9ASHQ6F0WCCJ7MRWW4EXCTE5X549WAUC"
         qr = pyqrcode.create(bolt11) 
         qr.png(tip_file, scale=3, module_color=[0,0,0,128], background=[0xff, 0xff, 0xff])
         return tip_file
@@ -59,7 +58,7 @@ async def activate_extensions(url: str, user_id: str, session: ClientSession ):
         tasks.append(task)
     result = await asyncio.wait(tasks)
     print(result)
-    if all(result):
+    if any(result):
         print(f"OK all extensions added {extension_list} , no problems")
         return True
     else: 
@@ -111,6 +110,8 @@ async def get_supauser_data(supabase: Client, username: str):
 
 async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
     try:
+        # first check to see if the address exists or not
+
         # create ln address w/laisee_email
         # create lnurlp link, add to github in file called 'telegram_name'
         lnurlp = LnurlPay(wallet_config, session)
@@ -199,6 +200,7 @@ async def delete_lnaddress(session: ClientSession, wallet_config: LConfig):
     except Exception as e: 
         print("Error deleting lightning address: " + str(e))
         return False
+
 
 
 async def create_laisee_user(telegram_name: str, config, session: ClientSession, supabase: Client): 

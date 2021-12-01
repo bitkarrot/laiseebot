@@ -22,12 +22,7 @@ async def delete_user(wallet_config: LConfig, masterc: Config, supabase: Client,
         suparesult = True
     lnbitsresult  = bool(res)
 
-        # master config required for LNBits deletion
-    '''
-    print(f'==============DELETE LIGHTNING ADDRESS==================')
-    lnresult = await delete_lnaddress(session, wallet_config)
-    print(f'lightning address deleted: { lnresult }')
-    '''
+    # master config required for LNBits deletion
     # result = [lnresult, suparesult, lnbitsresult]
     result = [ suparesult, lnbitsresult]
     # parse data, res lnresult, and return 1 unified result
@@ -48,6 +43,9 @@ async def create_user(telegram_name: str, masterc: Config, supabase: Client, ses
 
     wallet_config = user_wallet.config
     # print(f'lnbits_url: {wallet_config.lnbits_url}')
+    return wallet_config
+
+
     '''
     print(f'==============CREATE LIGHTNING ADDRESS==================')
     # create lightning address - done, addresses pushes to web in about 5 min
@@ -55,7 +53,13 @@ async def create_user(telegram_name: str, masterc: Config, supabase: Client, ses
     lnresult = await create_lnaddress(session, wallet_config)
     print(f"Lightning Address creation result: { lnresult }")
     '''
-    return wallet_config
+
+    '''
+    print(f'==============DELETE LIGHTNING ADDRESS==================')
+    lnresult = await delete_lnaddress(session, wallet_config)
+    print(f'lightning address deleted: { lnresult }')
+    '''
+
 
 
 async def get_user(telegram_name: str, masterc: Config, supabase: Client):

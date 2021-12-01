@@ -9,10 +9,9 @@ from pylnbits.user_wallet import UserWallet
 from pylnbits.lnurl_p import LnurlPay
 from pylnbits.lnurl_w import LnurlWithdraw
 
-
 from local_config import LConfig
 from client_methods import create_user, delete_user, get_user
-from laisee_utils import get_QRimg
+from laisee_utils import get_QRimg, create_lnaddress, delete_lnaddress
 
 from telethon import TelegramClient, events, Button
 
@@ -52,6 +51,7 @@ client = TelegramClient(config["session_name"],
 # Default to another parse mode
 client.parse_mode = 'html'
 
+
 lang = 'en'
 info = get_info_msgs(lang)
 menu = get_topmenu(lang)
@@ -66,7 +66,8 @@ async def bot_create_user(telegram_name):
     async with ClientSession() as session:
         wallet_config = await create_user(telegram_name, masterc, supabase, session)
         return wallet_config
-        
+
+
 async def bot_get_user(telegram_name):
     wallet_config = await get_user(telegram_name, masterc, supabase)
     return wallet_config
@@ -121,6 +122,14 @@ async def alerthandler(event):
     # only use for testing
     userlink = await wallet_config.get_lnbits_link()
     await client.send_message(event.sender_id, userlink)
+
+    # Create lightning address
+    async with ClientSession() as session:
+        lnresult = await create_lnaddress(session, wallet_config)
+        await client.send_message(event.sender_id, f"Lightning Address creation result: { lnresult }")
+
+    print('>>>>> End of Start method <<<<<<<')
+
     
 
 @client.on(events.CallbackQuery())
@@ -148,15 +157,14 @@ async def callback(event):
                     "min": 10,
                     "comment_chars": 100}
             paylink = await lnurlp.create_paylink(body=body)
-            print(str(paylink))
+            # print(str(paylink))
             msg = "Here is the Top Up QR Code and LNURL.\n\n"
             msg = msg +  f"<b>Min Deposit:</b> {paylink['min']} sats\n<b>Max Deposit:</b> {paylink['max']} sats\n" 
             lnurl = paylink['lnurl']
-            # TODO: Get QR code from here
             qrimg = get_QRimg(telegram_name, lnurl)
             msg = msg +  "\n" + "<b>Scan me to deposit!</b>"
             await event.reply(msg)
-            print(qrimg)
+            # print(qrimg)
             await client.send_file(event.chat_id, qrimg, caption=lnurl)
             #await client.send_file(event.chat_id, qrimg)
 
@@ -174,6 +182,7 @@ async def callback(event):
 
             delete_msg = "OK, Deleted everything! Sorry to see you go. If you want to recreate your wallet anytime just type /start"
             await event.edit(delete_msg, buttons=[Button.text('Bye!', resize=True, single_use=True)])
+            # TODO delete lnaddress
         else: 
             delete_msg = "Having trouble deleting your wallet, please contact an admin via helpdesk"
             await event.edit(delete_msg)
@@ -198,7 +207,7 @@ async def callback(event):
                 await event.reply(msg)
                 # TODO convert SVG to PNG for telegram delivery
                 svgimg = await withdraw.get_image_embed(withdraw_id)
-                print("\n\nSVG image: ", str(svgimg), "\n\n")
+                # print("\n\nSVG image: ", str(svgimg), "\n\n")
             else: 
                 msg = f'Balance is too small to create a withdraw link'
                 await event.reply(msg)
@@ -206,9 +215,10 @@ async def callback(event):
 
     ### send laisee ###
     if query_name == 'Telegram User':
-        # TODO /send <amt> @username
-        msg = "To send to another user, type `/send <<amt>> @username`"
+        # /send amount @username
+        msg = "To send to another user, type `/send amt @username`, example: /send 100 @user123"
         await event.reply(msg)
+
 
     if query_name == 'Laisee Image':
         # TODO user gives Amount, message
@@ -231,10 +241,21 @@ async def callback(event):
         msg = sats_convert(query_name)
         await event.reply(msg)
         
+    logger.info('Callback method called')
+
+
+@events.register(events.NewMessage(incoming=True, outgoing=False))
+async def laisee(event):
+    input = str(event.raw_text)
+    sender = await event.get_sender()
+    username = sender.username
+    chatid = event.chat_id
+    logger.info(f"laisee handler: {input}, by @{username} in chatid: {chatid}")
+
+
 
 @events.register(events.NewMessage(incoming=True, outgoing=False))
 async def handler(event):
-
     input = str(event.raw_text)
     sender = await event.get_sender()
     username = sender.username
@@ -292,11 +313,65 @@ async def handler(event):
         msg = sats_convert(input)
         await event.reply(msg)
 
+    if ('/send' in input):
+        await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
+        params = input.split(' ')
+        if len(params) == 3:
+            print(params[1], params[2])
+            amt = float(params[1])
+            receiver = params[2].split('@')[1]
+            print(receiver)   
+            # check if user exists
+            try:
+                recv_id = await client.get_peer_id(receiver)
+                print(f'peer user id : {recv_id}')
+                print(f'sender id : { event.sender_id }')
+            except ValueError as e: 
+                print(e)
+                await client.send_message(event.sender_id, f'Not a valid Telegram User. @{receiver}')
+                return
+            # get receiver wallet config
+            receiver_config = await bot_get_user(receiver)
+            async with ClientSession() as session:
+                recv_wallet = UserWallet(config=receiver_config, session=session)
+                bolt11 = await recv_wallet.create_invoice(direction=False, amt=amt, memo="laisee", webhook="")
+                send_wallet = UserWallet(config=wallet_config, session=session)
+                # CHECK FOR SUFFICIENT BALANCE ERRORS
+                # {"id": <string>, "name": <string>, "balance": <int>}
+                sendinfo = await send_wallet.get_wallet_details()
+                balance = float(sendinfo['balance'])/1000
+                if balance-1 < amt:
+                    await client.send_message(event.send_id, f'insufficient balance to send: {balance}')
+                    return
+                # send pay invoice
+                payhash = await send_wallet.pay_invoice(direction=True, bolt11=bolt11)
+                print(f'>>>>> payhash : {payhash}')
+                inv_check = send_wallet.check_invoice(payhash)
+                # notify sender and recipient
+                if inv_check['paid']:
+                    await client.send_file(recv_id, './images/laisee.png')
+                    await client.send_message(recv_id, f" Kung Hei Fat Choy! You've received a laisee from @{username}\n")
+                    recvinfo = await recv_wallet.get_wallet_details()
+                    await client.send_message(recv_id, str(recvinfo))
+
+                    await client.send_message(event.sender_id, f'Sent Laisee to your recipient! @{receiver}')
+                    sendinfo = await send_wallet.get_wallet_details()
+                    await client.send_message(event.sender_id, str(sendinfo))
+                else: 
+                    await client.send_message(event.sender_id, "Error sending Laisee")
+
+        else:
+            msg = "Looks like there isn't enough info to send, please give an amount and a recipient\n"
+            msg = msg + "\nExample: <b>/send 100 @username</b>"
+            await event.reply(msg)
+
 
 #### start bot ####
 client.start(bot_token=TOKEN)
 
 with client:
     client.add_event_handler(handler)
+    client.add_event_handler(laisee)
+
     logger.info('(Press Ctrl+C to stop this)')
     client.run_until_disconnected()

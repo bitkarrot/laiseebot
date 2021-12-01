@@ -13,7 +13,7 @@ def split(arr, size):
 def get_buttons(my_list):
     buttons = []
     for item in my_list:
-        print(item)
+        # print(item)
         buttons.append(Button.inline(item, item))
     return buttons
     
