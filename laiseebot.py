@@ -218,8 +218,7 @@ async def callback(event):
         # /send amount @username
         msg = "To send to another user, type `/send amt @username`, example: /send 100 @user123"
         await event.reply(msg)
-
-
+    
     if query_name == 'Laisee Image':
         # TODO user gives Amount, message
         msg = "clicked on 'Laisee Image' "
