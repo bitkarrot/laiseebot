@@ -14,6 +14,10 @@ from pylnbits.lnurl_p import LnurlPay
 from local_config import LConfig
 
 import pyqrcode
+from jinja2 import Template 
+import subprocess
+import base64
+
 
 # test user creation with pylnbits and supabase-py
 # laisee user = supabase + lnbits accounts
@@ -22,6 +26,47 @@ import pyqrcode
 # rewrite subprocess commits with simplegit in node.js, 
 # python-git not suitable for long running processes
 git_repo_path = "../laisee-frontpage/public/.well-known/lnurlp/"
+
+
+
+def create_laisee_qrcode(lnurl: str, idnumber: str, expires: str, sats: str, template_file: str):
+    '''
+    EDIT YOUR TEMPLATE FILE to refer to lnurl_file and qr_code, idnumber, expires and sats with {{ }}
+    example: {{sats}}
+    '''
+    try:
+        lnurl_file = "images/lnurl_" + idnumber + ".png" # make this id number based to prevent collision
+        output_svg = 'images/output_' + idnumber + '.svg'
+        output_png = 'images/output_' + idnumber + '.png'
+
+        # todo: check if lnurl is valid
+        pyqr = pyqrcode.create(lnurl,  error='H')
+
+        # change your QR code foreground and background colors here
+        pyqr.png(lnurl_file, scale=3, module_color=[170,0,0,255], background=[255, 255, 255])
+    
+        with open(lnurl_file, 'rb') as fp:
+            data = fp.read()
+            base64qr = base64.b64encode(data).decode('utf-8')
+            # print(base64qr)
+            fp.close()
+
+        qr_code = "\"data:image/png;base64," + base64qr + "\""
+
+        with open(template_file, 'r') as tf:
+            templ = tf.read()
+            tf.close()
+
+        tm = Template(templ)
+        msg = tm.render(qrcode=qr_code, idnumber=idnumber, expires=expires, sats=sats)
+
+        with open(output_svg, 'w') as f:
+            f.write(msg)
+            f.close()
+        subprocess.run(['rsvg-convert', output_svg, '-o', output_png, '-w' , '600'], cwd=".")
+        return output_png
+    except Exception as e: 
+        return str(e)
 
 
 def get_QRimg(telegram: str, bolt11: str):

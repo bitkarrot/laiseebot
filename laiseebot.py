@@ -1,6 +1,5 @@
 # from requests.sessions import merge_setting
-from labels import get_info_msgs, get_topmenu, get_lnaddress_info
-
+from labels import get_info_msgs, get_topmenu, get_lnaddress_info, en_laisee_created
 from aiohttp.client import ClientSession
 from supabase import create_client, Client
 import os
@@ -11,7 +10,8 @@ from pylnbits.lnurl_w import LnurlWithdraw
 
 from local_config import LConfig
 from client_methods import create_user, delete_user, get_user
-from laisee_utils import get_QRimg, create_lnaddress, delete_lnaddress
+from laisee_utils import get_QRimg, create_lnaddress, delete_lnaddress, create_laisee_qrcode
+import datetime as dt
 
 from telethon import TelegramClient, events, Button
 
@@ -60,6 +60,9 @@ masterc = Config(config_file="config.yml")
 supa_url: str = os.environ.get("SUPABASE_URL")
 supa_key: str = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(supa_url, supa_key)
+fee_base = 21
+fee_percent = 0.01
+template_file = 'templates/inlet_tiger_cut.svg'
 
 
 async def bot_create_user(telegram_name):
@@ -111,11 +114,12 @@ async def alerthandler(event):
     msg = info['welcome']
     await client.send_message(event.sender_id, msg, buttons=[
             [Button.text(menu['topup'], resize=True, single_use=False),
-            Button.text(menu['send'], resize=True, single_use=False)],
+            Button.text(menu['laisee'], resize=True, single_use=False)],
             [Button.text(menu['balance'], resize=True, single_use=False),
-            Button.text(menu['tools'], resize=True, single_use=False)], 
+            Button.text(menu['send'], resize=True, single_use=False)], 
             [Button.text(menu['settings'], resize=True, single_use=False),
-            Button.text(menu['help'], resize=True, single_use=False)]])
+            Button.text(menu['tools'], resize=True, single_use=False)],
+            [Button.text(menu['help'], resize=True, single_use=False)]])
     # create or get user, return wallet_config
     wallet_config = await bot_create_user(telegram_name)
 
@@ -137,7 +141,7 @@ async def callback(event):
     sender = await event.get_sender()
     query_name = event.data.decode()
     print(f"callback: " + query_name)
-    await event.edit('Thank you for clicking {}!'.format(query_name))
+    await event.edit('Thank you for clicking on {}!'.format(query_name))
     telegram_name = str(sender.username)
     wallet_config = await bot_get_user(telegram_name)
 
@@ -213,21 +217,19 @@ async def callback(event):
                 await event.reply(msg)
 
 
-    ### send laisee ###
-    if query_name == 'Telegram User':
-        # /send amount @username
-        msg = "To send to another user, type `/send amt @username`, example: /send 100 @user123"
+
+    laisee_amts = ['168', '1000', '8888', '25000']
+    if query_name in laisee_amts: 
+        msg = f'Ok, I will make a Laisee with {query_name} sats'
         await event.reply(msg)
-    
-    if query_name == 'Laisee Image':
-        # TODO user gives Amount, message
-        msg = "clicked on 'Laisee Image' "
-        await event.reply(msg)
+        # todo: // add query to /laisee amt
+        
 
     if query_name == 'Lnbits Url':
         link = await wallet_config.get_lnbits_link()
         msg = f"This is your link to the LNBits interface:\n {link}"
         await event.reply(msg)
+
 
     ###### Tools ######
     rates = menu['toolopts'][0]
@@ -241,15 +243,6 @@ async def callback(event):
         await event.reply(msg)
         
     logger.info('Callback method called')
-
-
-@events.register(events.NewMessage(incoming=True, outgoing=False))
-async def laisee(event):
-    input = str(event.raw_text)
-    sender = await event.get_sender()
-    username = sender.username
-    chatid = event.chat_id
-    logger.info(f"laisee handler: {input}, by @{username} in chatid: {chatid}")
 
 
 
@@ -276,12 +269,19 @@ async def handler(event):
         set_split = split(set_buttons, 1)
         await client.send_message(event.sender_id, msg, buttons=set_split)
 
-    if menu['send'] == input: 
-        msg = info['send']
-        send_options = menu['sendopts']
-        send_buttons = get_buttons(send_options)
-        send_split = split(send_buttons, 1)
-        await client.send_message(event.sender_id, msg, buttons=send_split)
+    ### send laisee ###
+    if menu['send'] == input:
+        # /send amount @username
+        msg = info['send_detail']
+        await event.reply(msg)
+    
+    ### make laisee image that is forwardable ### 
+    if  menu['laisee'] == input:
+        msg = info['laisee_amts']
+        amts = menu['laisee_amts']
+        amt_buttons = get_buttons(amts)
+        amt_split = split(amt_buttons, 2)
+        await client.send_message(event.sender_id, msg, buttons=amt_split)
 
 
     if menu['balance'] == input:
@@ -312,6 +312,42 @@ async def handler(event):
         msg = sats_convert(input)
         await event.reply(msg)
 
+    if ('/laisee' in input):
+        await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
+        # create image w/lnurlw
+        params = input.split(' ')
+        if len(params) == 2:
+            print(params[1])
+            amt = int(params[1])
+            fee_amt = int(amt * fee_percent) + fee_base
+            send_amt = amt + fee_amt
+            async with ClientSession() as session:
+                lw = LnurlWithdraw(wallet_config, session)
+                # creates link, doesn't check balance
+                # must be of integer type
+                title = f'Laisee amount: {int(send_amt)}'
+                body = {"title": title, 
+                    "min_withdrawable": int(send_amt),
+                    "max_withdrawable": int(send_amt), 
+                    "uses": 1, 
+                    "wait_time": 3600, 
+                    "is_unique": True }
+                newlink = await lw.create_withdrawlink(body)
+                print(f"create withdraw link with body: {body}, result link: {newlink} \n")
+                withdraw_id = newlink['id']
+                lnurl = newlink['lnurl']
+                # always expires 3 months from now
+                expires = str(dt.datetime.now() + dt.timedelta(days=365.25/4)).split(' ')[0]
+                output_png = create_laisee_qrcode(lnurl, withdraw_id, expires, str(amt), template_file)
+                await client.send_file(event.sender_id, output_png)
+                await client.send_message(event.sender_id, en_laisee_created)
+        else: 
+            msg = "Looks like there isn't an amount or sufficient balance to send\n"
+            msg = msg + "\nExample: <b>/laisee 100 </b>"
+            await event.reply(msg)
+
+
+
     if ('/send' in input):
         await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
         params = input.split(' ')
@@ -338,8 +374,9 @@ async def handler(event):
                 # CHECK FOR SUFFICIENT BALANCE ERRORS
                 # {"id": <string>, "name": <string>, "balance": <int>}
                 sendinfo = await send_wallet.get_wallet_details()
-                balance = float(sendinfo['balance'])/1000
-                if balance-1 < amt:
+                balance = float(sendinfo['balance'])/1000                
+                fee_amt = int(amt * fee_percent) + fee_base
+                if balance-fee_amt < amt:
                     await client.send_message(event.send_id, f'insufficient balance to send: {balance}')
                     return
                 # send pay invoice
@@ -348,7 +385,7 @@ async def handler(event):
                 inv_check = send_wallet.check_invoice(payhash)
                 # notify sender and recipient
                 if inv_check['paid']:
-                    await client.send_file(recv_id, './images/laisee.png')
+                    await client.send_file(recv_id, './images/honeybadger.jpeg')
                     await client.send_message(recv_id, f" Kung Hei Fat Choy! You've received a laisee from @{username}\n")
                     recvinfo = await recv_wallet.get_wallet_details()
                     await client.send_message(recv_id, str(recvinfo))
@@ -370,7 +407,6 @@ client.start(bot_token=TOKEN)
 
 with client:
     client.add_event_handler(handler)
-    client.add_event_handler(laisee)
 
     logger.info('(Press Ctrl+C to stop this)')
     client.run_until_disconnected()
