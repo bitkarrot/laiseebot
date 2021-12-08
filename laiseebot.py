@@ -120,9 +120,10 @@ async def QR_Topup(wallet_config):
         return link 
 
 
-async def get_laisee_img(amt, wallet_config):
-    fee_amt = int(amt * fee_percent) + fee_base
-    send_amt = amt + fee_amt
+async def get_laisee_img(amt: int, wallet_config: str):
+    fee_amt = (float(amt) * fee_percent) + fee_base
+    send_amt = float(amt) + fee_amt
+
     async with ClientSession() as session:
         lw = LnurlWithdraw(wallet_config, session)
         # creates link, doesn't check balance
@@ -141,7 +142,16 @@ async def get_laisee_img(amt, wallet_config):
         # always expires 3 months from now
         expires = str(dt.datetime.now() + dt.timedelta(days=365.25/4)).split(' ')[0]        
         output_png = create_laisee_qrcode(lnurl, withdraw_id, expires, str(amt), template_file)
-        return output_png
+        return output_png, fee_amt
+
+
+async def get_balance(session, wallet_config):
+    user_wallet = UserWallet(config=wallet_config, session=session)
+    walletinfo = await user_wallet.get_wallet_details()
+    # await client.send_message(event.sender_id, str(walletinfo))
+    balance = float(walletinfo['balance'])/1000
+    msg = f'Your Wallet Balance: {str(balance)} sats'
+    return msg
 
 
 
@@ -223,7 +233,6 @@ async def callback(event):
 
             delete_msg = "OK, Deleted everything! Sorry to see you go. If you want to recreate your wallet anytime just type /start"
             await event.edit(delete_msg, buttons=[Button.text('Bye!', resize=True, single_use=True)])
-            # TODO delete lnaddress
             async with ClientSession() as session:
                 status = await delete_lnaddress(session, wallet_config)
                 print(f'Delete LN Address Status { status }')
@@ -260,12 +269,12 @@ async def callback(event):
     laisee_amts = ['168', '1000', '8888', '25000']
     if query_name in laisee_amts: 
         amt = query_name
-        msg = f'Ok, I will make a Laisee with {amt} sats, please give me a moment...'
+        msg = f'Ok, I will make a Laisee with {amt} sats plus fees, please give me a moment...'
         await event.reply(msg)
-        output_png = await get_laisee_img(amt, wallet_config)
+        output_png, fee_amt = await get_laisee_img(int(amt), wallet_config)
         await client.send_file(event.sender_id, output_png)
         await client.send_message(event.sender_id, en_laisee_created)
-        # todo: // test laisee creation
+        await client.send_message(event.sender_id, f'total fees: {fee_amt}')
         
 
     if query_name == 'Lnbits Url':
@@ -312,12 +321,11 @@ async def handler(event):
         set_split = split(set_buttons, 1)
         await client.send_message(event.sender_id, msg, buttons=set_split)
 
-    ### send laisee ###
+    ### send TG laisee ###
     if menu['send'] == input:
         # /send amount @username
         msg = info['send_detail']
         await event.reply(msg)
-        # todo: add send laisee method here
 
     
     ### make laisee image that is forwardable, buttons for amounts shown here ### 
@@ -332,12 +340,7 @@ async def handler(event):
     if menu['balance'] == input:
         if wallet_config is not None:
             async with ClientSession() as session:
-                user_wallet = UserWallet(config=wallet_config, session=session)
-                walletinfo = await user_wallet.get_wallet_details()
-                await client.send_message(event.sender_id, str(walletinfo))
-
-                balance = float(walletinfo['balance'])/1000
-                msg = f'Your Wallet Balance: {str(balance)} sats'
+                msg = await get_balance(session, wallet_config)
                 await client.send_message(event.sender_id, msg)
 
 
@@ -364,9 +367,10 @@ async def handler(event):
         if len(params) == 2:
             print(params[1])
             amt = int(params[1])
-            output_png = await get_laisee_img(amt, wallet_config)
+            output_png, fee_amt = await get_laisee_img(amt, wallet_config)
             await client.send_file(event.sender_id, output_png)
             await client.send_message(event.sender_id, en_laisee_created)
+            await client.send_message(event.sender_id, f'total fees: {fee_amt}')
         else: 
             msg = "Looks like there isn't an amount or sufficient balance to send\n"
             msg = msg + "\nExample: <b>/laisee 100 </b>"

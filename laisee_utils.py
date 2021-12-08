@@ -39,7 +39,7 @@ def create_laisee_qrcode(lnurl: str, idnumber: str, expires: str, sats: str, tem
         output_svg = 'images/output_' + idnumber + '.svg'
         output_png = 'images/output_' + idnumber + '.png'
 
-        # todo: check if lnurl is valid
+        # assume lnurl is valid
         pyqr = pyqrcode.create(lnurl,  error='H')
 
         # change your QR code foreground and background colors here
@@ -204,7 +204,8 @@ async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
             fp.write(json.dumps(ln_data))
 
         if os.path.isfile(new_path):
-            # TODO asynchronous subprocess, handle exceptions if git cannot be reached.
+            # TODO:
+            # node updategit.cjs -d <filename> >> ./logfile 2>&1`
             now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S%Z")  
             subprocess.run(['git', 'add', telegram_name ], cwd=git_repo_path)
             subprocess.run(['git', 'commit', '-m', "Add " + telegram_name + " added: " + now], cwd=git_repo_path)
