@@ -9,7 +9,7 @@ const repo_name = '/laisee-frontpage'
 
 const USER = 'bitkarrot';
 const REPO = 'github.com/bitkarrot' + repo_name;
-const dirPath = path.join(__dirname, repo_name);
+const dirPath = path.join(__dirname,  "../" + repo_name);
 console.log("dirPath: ", dirPath)
 
 const PASS = process.env.GITPASS
