@@ -161,7 +161,8 @@ async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
         # simple check: look at github repo for telegram named file in folder  
         # doesn't guarantee validity, if not deleted from previous account creation 
         # assume git repo in 1 level up
-        git_entry = "../laisee-frontpage/public/.well-known/" + telegram_name
+        git_entry = "../laisee-frontpage/public/.well-known/lnurlp/" + telegram_name
+        print(f'git entry : { git_entry} ')
         if os.path.exists(git_entry):
             return True
         # create ln address w/laisee_email

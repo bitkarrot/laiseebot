@@ -98,6 +98,53 @@ async def check_user_exists(username):
         return e
 
 
+async def QR_Topup(wallet_config):
+    async with ClientSession() as session:
+        lnurlp = LnurlPay(wallet_config, session)
+        paylinks = await lnurlp.list_paylinks()
+        print(f'paylinks: {paylinks}')
+        link = None
+        for i in paylinks:
+            if i['description'] == "QRCode":
+                link = i
+                print(f' fetched historical link')                
+        if link is None:
+            # if no qr paylink then create one
+            body = {"description": "QRCode",
+                    "amount": 10,
+                    "max": 10000,
+                    "min": 10,
+                    "comment_chars": 100}
+            link = await lnurlp.create_paylink(body=body)
+            print(f'created QRCODE lnurlp: {str(link)}')
+        return link 
+
+
+async def get_laisee_img(amt, wallet_config):
+    fee_amt = int(amt * fee_percent) + fee_base
+    send_amt = amt + fee_amt
+    async with ClientSession() as session:
+        lw = LnurlWithdraw(wallet_config, session)
+        # creates link, doesn't check balance
+        # must be of integer type
+        title = f'Laisee amount: {int(send_amt)}'
+        body = {"title": title, 
+            "min_withdrawable": int(send_amt),
+            "max_withdrawable": int(send_amt), 
+            "uses": 1, 
+            "wait_time": 3600, 
+            "is_unique": True }
+        newlink = await lw.create_withdrawlink(body)
+        print(f"create withdraw link with body: {body}, result link: {newlink} \n")
+        withdraw_id = newlink['id']
+        lnurl = newlink['lnurl']
+        # always expires 3 months from now
+        expires = str(dt.datetime.now() + dt.timedelta(days=365.25/4)).split(' ')[0]        
+        output_png = create_laisee_qrcode(lnurl, withdraw_id, expires, str(amt), template_file)
+        return output_png
+
+
+
 @client.on(events.NewMessage(pattern='(?i)/start', forwards=False, outgoing=False))
 async def alerthandler(event):
     sender = await event.get_sender()
@@ -125,11 +172,10 @@ async def alerthandler(event):
 
     # only use for testing
     userlink = await wallet_config.get_lnbits_link()
-    await client.send_message(event.sender_id, userlink)
+    await client.send_message(event.sender_id, f'For testing purposes only: {userlink}')
 
     # Create lightning address - first check does it exist for this wallet? 
     async with ClientSession() as session:
-        
         lnresult = await create_lnaddress(session, wallet_config)
         await client.send_message(event.sender_id, f"Lightning Address creation result: { lnresult }")
 
@@ -154,24 +200,14 @@ async def callback(event):
         await event.reply(msg)
     
     if query_name == 'QRCode':
-        async with ClientSession() as session:
-            lnurlp = LnurlPay(wallet_config, session)   
-            body = {"description": "LN address for QR code Deposit: " + telegram_name,
-                    "amount": 10,
-                    "max": 10000,
-                    "min": 10,
-                    "comment_chars": 100}
-            paylink = await lnurlp.create_paylink(body=body)
-            # print(str(paylink))
-            msg = "Here is the Top Up QR Code and LNURL.\n\n"
-            msg = msg +  f"<b>Min Deposit:</b> {paylink['min']} sats\n<b>Max Deposit:</b> {paylink['max']} sats\n" 
-            lnurl = paylink['lnurl']
-            qrimg = get_QRimg(telegram_name, lnurl)
-            msg = msg +  "\n" + "<b>Scan me to deposit!</b>"
-            await event.reply(msg)
-            # print(qrimg)
-            await client.send_file(event.chat_id, qrimg, caption=lnurl)
-            #await client.send_file(event.chat_id, qrimg)
+        link = await QR_Topup(wallet_config)
+        msg = "Here is the Top Up QR Code and LNURL.\n\n"
+        msg = msg +  f"<b>Min Deposit:</b> {link['min']} sats\n<b>Max Deposit:</b> {link['max']} sats\n" 
+        lnurl = link['lnurl']
+        qrimg = get_QRimg(telegram_name, lnurl)
+        msg = msg +  "\n" + "<b>Scan me to deposit!</b>"
+        await event.reply(msg)
+        await client.send_file(event.chat_id, qrimg, caption=lnurl)
 
     
     ### settings ###
@@ -188,6 +224,9 @@ async def callback(event):
             delete_msg = "OK, Deleted everything! Sorry to see you go. If you want to recreate your wallet anytime just type /start"
             await event.edit(delete_msg, buttons=[Button.text('Bye!', resize=True, single_use=True)])
             # TODO delete lnaddress
+            async with ClientSession() as session:
+                status = await delete_lnaddress(session, wallet_config)
+                print(f'Delete LN Address Status { status }')
         else: 
             delete_msg = "Having trouble deleting your wallet, please contact an admin via helpdesk"
             await event.edit(delete_msg)
@@ -218,12 +257,15 @@ async def callback(event):
                 await event.reply(msg)
 
 
-
     laisee_amts = ['168', '1000', '8888', '25000']
     if query_name in laisee_amts: 
-        msg = f'Ok, I will make a Laisee with {query_name} sats'
+        amt = query_name
+        msg = f'Ok, I will make a Laisee with {amt} sats, please give me a moment...'
         await event.reply(msg)
-        # todo: // add query to /laisee amt
+        output_png = await get_laisee_img(amt, wallet_config)
+        await client.send_file(event.sender_id, output_png)
+        await client.send_message(event.sender_id, en_laisee_created)
+        # todo: // test laisee creation
         
 
     if query_name == 'Lnbits Url':
@@ -275,8 +317,10 @@ async def handler(event):
         # /send amount @username
         msg = info['send_detail']
         await event.reply(msg)
+        # todo: add send laisee method here
+
     
-    ### make laisee image that is forwardable ### 
+    ### make laisee image that is forwardable, buttons for amounts shown here ### 
     if  menu['laisee'] == input:
         msg = info['laisee_amts']
         amts = menu['laisee_amts']
@@ -316,33 +360,13 @@ async def handler(event):
     if ('/laisee' in input):
         await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
         # create image w/lnurlw
-        # TODO: refactor into a separate method 
         params = input.split(' ')
         if len(params) == 2:
             print(params[1])
             amt = int(params[1])
-            fee_amt = int(amt * fee_percent) + fee_base
-            send_amt = amt + fee_amt
-            async with ClientSession() as session:
-                lw = LnurlWithdraw(wallet_config, session)
-                # creates link, doesn't check balance
-                # must be of integer type
-                title = f'Laisee amount: {int(send_amt)}'
-                body = {"title": title, 
-                    "min_withdrawable": int(send_amt),
-                    "max_withdrawable": int(send_amt), 
-                    "uses": 1, 
-                    "wait_time": 3600, 
-                    "is_unique": True }
-                newlink = await lw.create_withdrawlink(body)
-                print(f"create withdraw link with body: {body}, result link: {newlink} \n")
-                withdraw_id = newlink['id']
-                lnurl = newlink['lnurl']
-                # always expires 3 months from now
-                expires = str(dt.datetime.now() + dt.timedelta(days=365.25/4)).split(' ')[0]
-                output_png = create_laisee_qrcode(lnurl, withdraw_id, expires, str(amt), template_file)
-                await client.send_file(event.sender_id, output_png)
-                await client.send_message(event.sender_id, en_laisee_created)
+            output_png = await get_laisee_img(amt, wallet_config)
+            await client.send_file(event.sender_id, output_png)
+            await client.send_message(event.sender_id, en_laisee_created)
         else: 
             msg = "Looks like there isn't an amount or sufficient balance to send\n"
             msg = msg + "\nExample: <b>/laisee 100 </b>"
@@ -351,6 +375,7 @@ async def handler(event):
 
 
     if ('/send' in input):
+        # factor out into separate method
         await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
         params = input.split(' ')
         if len(params) == 3:
