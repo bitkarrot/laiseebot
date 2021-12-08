@@ -127,8 +127,9 @@ async def alerthandler(event):
     userlink = await wallet_config.get_lnbits_link()
     await client.send_message(event.sender_id, userlink)
 
-    # Create lightning address
+    # Create lightning address - first check does it exist for this wallet? 
     async with ClientSession() as session:
+        
         lnresult = await create_lnaddress(session, wallet_config)
         await client.send_message(event.sender_id, f"Lightning Address creation result: { lnresult }")
 
@@ -155,7 +156,7 @@ async def callback(event):
     if query_name == 'QRCode':
         async with ClientSession() as session:
             lnurlp = LnurlPay(wallet_config, session)   
-            body = {"description": "LN address for " + telegram_name,
+            body = {"description": "LN address for QR code Deposit: " + telegram_name,
                     "amount": 10,
                     "max": 10000,
                     "min": 10,
@@ -315,6 +316,7 @@ async def handler(event):
     if ('/laisee' in input):
         await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
         # create image w/lnurlw
+        # TODO: refactor into a separate method 
         params = input.split(' ')
         if len(params) == 2:
             print(params[1])
