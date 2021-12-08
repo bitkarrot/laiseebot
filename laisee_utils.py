@@ -153,16 +153,22 @@ async def get_supauser_data(supabase: Client, username: str):
     return data
 
 
+
 async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
     try:
         # first check to see if the address exists or not
-
+        telegram_name = wallet_config.telegram
+        # simple check: look at github repo for telegram named file in folder  
+        # doesn't guarantee validity, if not deleted from previous account creation 
+        # assume git repo in 1 level up
+        git_entry = "../laisee-frontpage/public/.well-known/" + telegram_name
+        if os.path.exists(git_entry):
+            return True
         # create ln address w/laisee_email
+        laisee_email = telegram_name + "@laisee.org"
         # create lnurlp link, add to github in file called 'telegram_name'
         lnurlp = LnurlPay(wallet_config, session)
         # create pay link
-        telegram_name = wallet_config.telegram
-        laisee_email = telegram_name + "@laisee.org"
         body = {"description": "LN address for " + laisee_email,
                 "amount": 10,
                 "max": 10000,
