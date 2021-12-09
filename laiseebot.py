@@ -51,7 +51,6 @@ client = TelegramClient(config["session_name"],
 # Default to another parse mode
 client.parse_mode = 'html'
 
-
 lang = 'en'
 info = get_info_msgs(lang)
 menu = get_topmenu(lang)
@@ -145,13 +144,32 @@ async def get_laisee_img(amt: int, wallet_config: str):
         return output_png, fee_amt
 
 
-async def get_balance(session, wallet_config):
+async def get_balance(session, wallet_config) -> float:
     user_wallet = UserWallet(config=wallet_config, session=session)
     walletinfo = await user_wallet.get_wallet_details()
     # await client.send_message(event.sender_id, str(walletinfo))
     balance = float(walletinfo['balance'])/1000
-    msg = f'Your Wallet Balance: {str(balance)} sats'
-    return msg
+    return balance
+
+
+async def defund_wallet(wallet_config):
+    # creates a lnurlw link + QR, if balance > 1
+    async with ClientSession() as session:
+        user_wallet = UserWallet(config=wallet_config, session=session)
+        walletinfo = await user_wallet.get_wallet_details()
+        balance = float(walletinfo['balance'])/1000
+        fee_min = -1
+        if balance > fee_min: # assume min for fees is 1
+            body = {"title": "WithdrawLink", "min_withdrawable": 1, 
+            "max_withdrawable": int(balance-fee_min), "uses": 1,
+            "wait_time":1, "is_unique": True}
+            withdraw = LnurlWithdraw(wallet_config, session)
+            res = await withdraw.create_withdrawlink(body)
+            withdraw_id = res['id']
+            svgimg = await withdraw.get_image_embed(withdraw_id)
+            return withdraw_id, svgimg
+        else: 
+            return False, False
 
 
 
@@ -240,30 +258,23 @@ async def callback(event):
             delete_msg = "Having trouble deleting your wallet, please contact an admin via helpdesk"
             await event.edit(delete_msg)
 
+
     if query_name == 'Defund Wallet':
-        # creates a lnurlw link + QR, if balance > 1
-        async with ClientSession() as session:
-            user_wallet = UserWallet(config=wallet_config, session=session)
-            walletinfo = await user_wallet.get_wallet_details()
-            balance = float(walletinfo['balance'])/1000
-            fee_min = 1
-            if balance > fee_min: # assume min for fees is 1
-                body = {"title": "WithdrawLink", "min_withdrawable": 1, 
-                "max_withdrawable": int(balance-fee_min), "uses": 1,
-                "wait_time":1, "is_unique": True}
-                withdraw = LnurlWithdraw(wallet_config, session)
-                res = await withdraw.create_withdrawlink(body)
-                # print(res)
-                withdraw_id = res['id']
-                link = wallet_config.lnbits_url + "/withdraw/" + withdraw_id
-                msg = f"Here is your withdraw link: {link}"
-                await event.reply(msg)
-                # TODO convert SVG to PNG for telegram delivery
-                svgimg = await withdraw.get_image_embed(withdraw_id)
-                # print("\n\nSVG image: ", str(svgimg), "\n\n")
-            else: 
+        withdraw_id, svgimg = await defund_wallet(wallet_config)
+        if withdraw_id:
+            link = wallet_config.lnbits_url + "/withdraw/" + withdraw_id
+            msg = f"Here is your withdraw link: {link}"
+            await event.reply(msg)
+            # TODO convert SVG to PNG for telegram delivery
+            print("\n\nSVG image: ", str(svgimg), "\n\n")
+
+        else: 
+            async with ClientSession() as session:
                 msg = f'Balance is too small to create a withdraw link'
                 await event.reply(msg)
+                balance = await get_balance(session, wallet_config)
+                msg = f'Your Wallet Balance: {str(balance)} sats'
+                await client.send_message(event.sender_id, msg)
 
 
     laisee_amts = ['168', '1000', '8888', '25000']
@@ -333,14 +344,15 @@ async def handler(event):
         msg = info['laisee_amts']
         amts = menu['laisee_amts']
         amt_buttons = get_buttons(amts)
-        amt_split = split(amt_buttons, 2)
+        amt_split = split(amt_buttons, 4)
         await client.send_message(event.sender_id, msg, buttons=amt_split)
 
 
     if menu['balance'] == input:
         if wallet_config is not None:
             async with ClientSession() as session:
-                msg = await get_balance(session, wallet_config)
+                balance = await get_balance(session, wallet_config)
+                msg = f'Your Wallet Balance: {str(balance)} sats'
                 await client.send_message(event.sender_id, msg)
 
 

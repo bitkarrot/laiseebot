@@ -22,7 +22,7 @@ en_info = {'help': "<< Help message here >>\n\n<< add link to Telegram Help chat
            'username': 'Please set a username in telegram in order use this bot.',
            'welcome': 'Welcome to Lightning Laisee\n\n << add detailed welcome message here >> \n',
            'wallet':  "Your Wallet Balance\n",
-           'laisee_amts': 'Tell us how much you want to send by selecting an option below.\n Be sure to have enough balance! Or, customize: `/laisee  < amount > `',
+           'laisee_amts': 'Tell us how much you want to send by selecting an option below.\nBe sure to have enough balance! Or, customize: `/laisee  < amount > `',
            'send_detail': "To send to another user, type in the message box:\n/send amt @username \n\nFor Example: /send 100 @user123"
            }
 
