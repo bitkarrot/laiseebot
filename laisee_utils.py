@@ -197,7 +197,7 @@ async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
         new_path = git_repo_path + telegram_name
         # pull down for fresh updates before making edits to repo
         # subprocess.run(['git', 'pull'], cwd=git_repo_path)
-        subprocess.run(['node', 'updategit.cjs', '-p', '>>', './logfile 2>&1'])
+        subprocess.run(['node', 'update_git.cjs', '-p', '>>', './logfile 2>&1'])
 
         
         # check to make sure file doesn't exist. if its does, then remove and create new
@@ -208,14 +208,8 @@ async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
 
         if os.path.isfile(new_path):
             # TODO:
-            # node updategit.cjs -d <filename> >> ./logfile 2>&1`
-            subprocess.run(['node', 'updategit.cjs', '-a', telegram_name, '>>', './logfile 2>&1'])
-            '''
-            now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S%Z")  
-            subprocess.run(['git', 'add', telegram_name ], cwd=git_repo_path)
-            subprocess.run(['git', 'commit', '-m', "Add " + telegram_name + " added: " + now], cwd=git_repo_path)
-            subprocess.run(['git', 'push'], cwd=git_repo_path)
-            '''
+            # node update_git.cjs -d <filename> >> ./logfile 2>&1`
+            subprocess.run(['node', 'update_git.cjs', '-a', telegram_name, '>>', './logfile 2>&1'])
             return True
 
     except Exception as e: 
@@ -246,18 +240,12 @@ async def delete_lnaddress(session: ClientSession, wallet_config: LConfig):
             delete_result = await lnurlp.delete_paylink(pay_id)
             print(f'delete paylink result: {delete_result} ')
 
-        # TODO: node updategit.cjs -d <filename> >> ./logfile 2>&1`
-        subprocess.run(['node', 'updategit.cjs', '-p', '>>', './logfile 2>&1'])
+        # TODO: node update_git.cjs -d <filename> >> ./logfile 2>&1`
+        subprocess.run(['node', 'update_git.cjs', '-p', '>>', './logfile 2>&1'])
         # subprocess.run(['git', 'pull'], cwd=git_repo_path)
         # check for LN file. if it exists, then remove 
         if os.path.isfile(new_path):
-            subprocess.run(['node', 'updategit.cjs', '-a', telegram_name, '>>', './logfile 2>&1'])
-            '''
-            now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S%Z")
-            subprocess.run(['git', 'rm', telegram_name], cwd=git_repo_path)
-            subprocess.run(['git', 'commit', '-m', "Delete " + telegram_name + ": " + now], cwd=git_repo_path)
-            subprocess.run(['git', 'push'], cwd=git_repo_path)
-            '''
+            subprocess.run(['node', 'update_git.cjs', '-d', telegram_name, '>>', './logfile 2>&1'])
             return True
     
     except Exception as e: 

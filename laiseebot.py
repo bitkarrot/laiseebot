@@ -262,12 +262,12 @@ async def callback(event):
     if query_name == 'Defund Wallet':
         withdraw_id, svgimg = await defund_wallet(wallet_config)
         if withdraw_id:
-            link = wallet_config.lnbits_url + "/withdraw/" + withdraw_id
+            link = wallet_config.lnbits_url + "/withdraw/img/" + withdraw_id
+            # link points to QR Code
             msg = f"Here is your withdraw link: {link}"
             await event.reply(msg)
             # TODO convert SVG to PNG for telegram delivery
-            print("\n\nSVG image: ", str(svgimg), "\n\n")
-
+            # print("\n\nSVG image: ", str(svgimg), "\n\n")
         else: 
             async with ClientSession() as session:
                 msg = f'Balance is too small to create a withdraw link'
