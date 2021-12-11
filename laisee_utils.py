@@ -35,9 +35,9 @@ def create_laisee_qrcode(lnurl: str, idnumber: str, expires: str, sats: str, tem
     example: {{sats}}
     '''
     try:
-        lnurl_file = "images/lnurl_" + idnumber + ".png" # make this id number based to prevent collision
-        output_svg = 'images/output_' + idnumber + '.svg'
-        output_png = 'images/output_' + idnumber + '.png'
+        lnurl_file = "/tmp/lnurl_" + idnumber + ".png" # make this id number based to prevent collision
+        output_svg = '/tmp/output_' + idnumber + '.svg'
+        output_png = '/tmp/output_' + idnumber + '.png'
 
         # assume lnurl is valid
         pyqr = pyqrcode.create(lnurl,  error='H')

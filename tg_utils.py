@@ -22,6 +22,5 @@ async def downloadpic(client, event):
     # downloads the current profile photo into a file
     path = await client.download_profile_photo(event.sender_id)
     print(f"downloaded profile pic: {path}")
-    # await client.send_file(event.sender_id, './images/image2.jpeg')
 
 
