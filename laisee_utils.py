@@ -207,8 +207,6 @@ async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
             fp.write(json.dumps(ln_data))
 
         if os.path.isfile(new_path):
-            # TODO:
-            # node update_git.cjs -d <filename> >> ./logfile 2>&1`
             subprocess.run(['node', 'update_git.cjs', '-a', telegram_name, '>>', './logfile 2>&1'])
             return True
 
@@ -240,7 +238,6 @@ async def delete_lnaddress(session: ClientSession, wallet_config: LConfig):
             delete_result = await lnurlp.delete_paylink(pay_id)
             print(f'delete paylink result: {delete_result} ')
 
-        # TODO: node update_git.cjs -d <filename> >> ./logfile 2>&1`
         subprocess.run(['node', 'update_git.cjs', '-p', '>>', './logfile 2>&1'])
         # subprocess.run(['git', 'pull'], cwd=git_repo_path)
         # check for LN file. if it exists, then remove 
@@ -355,7 +352,7 @@ async def delete_laisee_user(wallet_config: LConfig, master_config: Config, supa
 
 
 async def update_supauser_email(wallet_config: LConfig, supabase: Client):
-    # web-todo: this is the supabase auth email, how to pull email from uuid?
+    # Far future web-todo: this is the supabase auth email, how to pull email from uuid?
     # should we keep record of true email in the wallet-config?
     return "supabase email address updated"
 

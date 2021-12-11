@@ -406,8 +406,7 @@ async def handler(event):
 
 
     if ('/send' in input):
-        # TODO : Add an option to /send 100 user@lnaddress.com
-        # factor out into separate method
+        # TODO: factor out into separate method
         await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
         params = input.split(' ')
         if len(params) == 3:
