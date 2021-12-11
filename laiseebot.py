@@ -222,30 +222,6 @@ async def callback(event):
     telegram_name = str(sender.username)
     wallet_config = await bot_get_user(telegram_name)
 
-    ### Top Up ###
-    '''
-    if query_name == 'Lightning Address':
-        msg = "\n\nYour Lightning Address is <b> " + telegram_name + "@laisee.org</b> and is Case Sensitive. \n\n"
-        msg = msg  + "If you just created your wallet, please wait a few minutes for the address to deploy\n"
-        msg = msg + "To check if the address is active: sendsats.to/qr/" + sender.username + "@laisee.org\n\n"
-        # msg = msg + ''.join(get_lnaddress_info(lang))
-        await event.reply(msg)
-
-    if query_name == 'QRCode':
-        link = await QR_Topup(wallet_config)
-        msg = "Here is the Top Up QR Code and LNURL.\n\n"
-        msg = msg +  f"<b>Min Deposit:</b> {link['min']} sats\n<b>Max Deposit:</b> {link['max']} sats\n" 
-        lnurl = link['lnurl']
-        qrimg = get_QRimg(telegram_name, lnurl)
-        msg = msg +  "\n" + "<b>Scan me to deposit!</b>"
-        await event.reply(msg)
-        await client.send_file(event.chat_id, qrimg, caption=lnurl)
-        msg = "\n\nYour Lightning Address is <b> " + telegram_name + "@laisee.org</b> and is Case Sensitive. \n\n"
-        msg = msg  + "If you just created your wallet, please wait a few minutes for the address to deploy\n"
-        msg = msg + "To check if the address is active: sendsats.to/qr/" + sender.username + "@laisee.org\n\n"
-        await event.reply(msg)
-    '''
-
     ### settings ###
     if query_name == 'Delete Wallet':
         msg = "OK, please give me a moment ....."
@@ -404,7 +380,6 @@ async def handler(event):
             await event.reply(msg)
 
 
-
     if ('/send' in input):
         # TODO: factor out into separate method
         await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
@@ -429,7 +404,7 @@ async def handler(event):
                 recv_wallet = UserWallet(config=receiver_config, session=session)
                 bolt11 = await recv_wallet.create_invoice(direction=False, amt=amt, memo="laisee", webhook="")
                 send_wallet = UserWallet(config=wallet_config, session=session)
-                # CHECK FOR SUFFICIENT BALANCE ERRORS
+                # CHECK FOR INSUFFICIENT BALANCE ERRORS
                 # {"id": <string>, "name": <string>, "balance": <int>}
                 sendinfo = await send_wallet.get_wallet_details()
                 balance = float(sendinfo['balance'])/1000                
