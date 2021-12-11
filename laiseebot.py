@@ -197,7 +197,9 @@ async def alerthandler(event):
             [Button.text(menu['help'], resize=True, single_use=False)]])
     # create or get user, return wallet_config
     wallet_config = await bot_create_user(telegram_name)
-
+    query = '/fiat 1 HKD'
+    sats_msg = sats_convert(query)
+    await client.send_message(event.sender_id, "1 HKD is currently worth " + sats_msg)
     # only use for testing
     userlink = await wallet_config.get_lnbits_link()
     await client.send_message(event.sender_id, f'For testing purposes only: {userlink}')
@@ -221,12 +223,14 @@ async def callback(event):
     wallet_config = await bot_get_user(telegram_name)
 
     ### Top Up ###
+    '''
     if query_name == 'Lightning Address':
         msg = "\n\nYour Lightning Address is <b> " + telegram_name + "@laisee.org</b> and is Case Sensitive. \n\n"
-        msg = msg + "To check if the address is active: https://sendsats.to/qr/" + sender.username + "@laisee.org\n\n"
-        msg = msg + ''.join(get_lnaddress_info(lang))
+        msg = msg  + "If you just created your wallet, please wait a few minutes for the address to deploy\n"
+        msg = msg + "To check if the address is active: sendsats.to/qr/" + sender.username + "@laisee.org\n\n"
+        # msg = msg + ''.join(get_lnaddress_info(lang))
         await event.reply(msg)
-    
+
     if query_name == 'QRCode':
         link = await QR_Topup(wallet_config)
         msg = "Here is the Top Up QR Code and LNURL.\n\n"
@@ -236,8 +240,12 @@ async def callback(event):
         msg = msg +  "\n" + "<b>Scan me to deposit!</b>"
         await event.reply(msg)
         await client.send_file(event.chat_id, qrimg, caption=lnurl)
+        msg = "\n\nYour Lightning Address is <b> " + telegram_name + "@laisee.org</b> and is Case Sensitive. \n\n"
+        msg = msg  + "If you just created your wallet, please wait a few minutes for the address to deploy\n"
+        msg = msg + "To check if the address is active: sendsats.to/qr/" + sender.username + "@laisee.org\n\n"
+        await event.reply(msg)
+    '''
 
-    
     ### settings ###
     if query_name == 'Delete Wallet':
         msg = "OK, please give me a moment ....."
@@ -319,11 +327,18 @@ async def handler(event):
     wallet_config = await bot_get_user(username)
 
     if menu['topup'] == input:
-        msg =  info['topup']
-        topup = menu['topopts']
-        topup_buttons = get_buttons(topup)
-        topupsplit = split(topup_buttons, 1)
-        await client.send_message(event.sender_id, msg, buttons=topupsplit)
+        link = await QR_Topup(wallet_config)
+        msg = "Here is the Top Up QR Code and LNURL.\n\n"
+        msg = msg +  f"<b>Min Deposit:</b> {link['min']} sats\n<b>Max Deposit:</b> {link['max']} sats\n" 
+        lnurl = link['lnurl']
+        qrimg = get_QRimg(username, lnurl)
+        msg = msg +  "\n" + "<b>Scan me to deposit!</b>"
+        await client.send_message(event.sender_id, msg)
+        await client.send_file(event.chat_id, qrimg, caption=lnurl)
+        msg = "\n\nYour Lightning Address is <b> " + username + "@laisee.org</b> and is Case Sensitive. \n\n"
+        msg = msg  + "If you just created your wallet, please wait a few minutes for the address to deploy\n"
+        await client.send_message(event.sender_id, msg)
+
 
     if menu['settings'] == input:
         msg = info['settings']
@@ -391,6 +406,7 @@ async def handler(event):
 
 
     if ('/send' in input):
+        # TODO : Add an option to /send 100 user@lnaddress.com
         # factor out into separate method
         await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
         params = input.split(' ')
