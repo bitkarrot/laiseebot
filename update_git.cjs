@@ -112,8 +112,10 @@ async function processAction(action, filePath) {
         await gitCommitPush("Deleted on: ")
 
     } else if (action === '-p') { 
-        const result = git.pull()
-        console.log("git pull: ", result)
+        const result = git.pull('origin', 'main')
+//        const result = git.pull('origin', 'main', {'--no-rebase': null})
+
+        console.log("git pull origin main: ", result)
         const status = await git.status();
         console.log('git status: ', status)
     } else if (action === '-m') {
