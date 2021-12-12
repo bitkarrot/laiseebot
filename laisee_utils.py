@@ -69,6 +69,16 @@ def create_laisee_qrcode(lnurl: str, idnumber: str, expires: str, sats: str, tem
         return str(e)
 
 
+def convertSVG(svgimg, withdraw_id):
+    output = "/tmp/" + withdraw_id + ".svg"
+    pngfile = "/tmp/" + withdraw_id  + ".png"
+    with open(output, 'w') as f:
+        f.write(svgimg)
+        f.close()
+    subprocess.run(['rsvg-convert', output, '-o', pngfile, '-w' , '600', '-b', 'white'], cwd=".")
+    return pngfile
+
+
 def get_QRimg(telegram: str, bolt11: str):
     try:
         tip_file = '/tmp/deposit_' + telegram + '.png'

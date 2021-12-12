@@ -10,7 +10,7 @@ from pylnbits.lnurl_w import LnurlWithdraw
 
 from local_config import LConfig
 from client_methods import create_user, delete_user, get_user
-from laisee_utils import get_QRimg, create_lnaddress, delete_lnaddress, create_laisee_qrcode
+from laisee_utils import get_QRimg, create_lnaddress, delete_lnaddress, create_laisee_qrcode, convertSVG
 import datetime as dt
 
 from telethon import TelegramClient, events, Button
@@ -250,8 +250,9 @@ async def callback(event):
             # link points to QR Code
             msg = f"Here is your withdraw link: {link}"
             await event.reply(msg)
-            # TODO convert SVG to PNG for telegram delivery
-            # print("\n\nSVG image: ", str(svgimg), "\n\n")
+            pngfile = convertSVG(svgimg, withdraw_id)
+            await client.send_file(event.sender_id, pngfile)
+            # convert SVG to PNG for telegram delivery
         else: 
             async with ClientSession() as session:
                 msg = f'Balance is too small to create a withdraw link'
