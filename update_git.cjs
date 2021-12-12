@@ -19,8 +19,8 @@ const git = require('simple-git')();
 const remote = `https://${USER}:${PASS}@${REPO}`;
 
 console.log('Remote:', remote)
-git.addConfig('user.email', 'bitkarrot@bitcoin.org.hk');
-git.addConfig('user.name', 'Bitkarrot');
+git.addConfig('user.email', 'send@laisee.org');
+git.addConfig('user.name', 'sendlaisee');
 
 
 // update file in the target github repo
@@ -114,6 +114,21 @@ async function processAction(action, filePath) {
     } else if (action === '-p') { 
         const result = git.pull()
         console.log("git pull: ", result)
+        const status = await git.status();
+        console.log('git status: ', status)
+    } else if (action === '-m') {
+        try {
+            const mergeSummary = await git.merge();
+            console.log(`Merged ${ mergeSummary.merges.length } files`);
+          }
+          catch (err) {
+            // err.message - the string summary of the error
+            // err.stack - some stack trace detail
+            // err.git - where a parser was able to run, this is the parsed content          
+            console.error(`Merge resulted in ${ err.git } conflicts`);
+            console.log(`error message: ${err.message}`);
+          }
+          
     }
 }
 
