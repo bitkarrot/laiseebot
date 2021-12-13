@@ -441,7 +441,7 @@ async def handler(event):
                 recv_id = await client.get_peer_id(receiver)
                 print(f'peer user id : {recv_id}')
                 print(f'sender id : { event.sender_id }')
-                                # get receiver wallet config
+                # get receiver wallet config
                 receiver_config = await bot_get_user(receiver)
                 print(f'receiver_config: {receiver_config}')
                 if receiver_config is None:
@@ -480,7 +480,7 @@ async def handler(event):
                     # send pay invoice
                     payhash = await send_wallet.pay_invoice(direction=True, bolt11=bolt11['payment_request'])
                     # print(f'>>>>> payhash : {payhash}')
-                    payment_hash = "/"+payhash['payment_hash']   # TODO Fix bug in pylnbits 
+                    payment_hash = "/"+payhash['payment_hash']   # TODO Fix missing "/" bug in pylnbits 
                     #print(f'paymenthash: {payment_hash} ')
                     inv_check = await send_wallet.check_invoice(payment_hash)
                     inv_content = json.dumps(inv_check)
