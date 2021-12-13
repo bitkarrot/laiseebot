@@ -56,8 +56,11 @@ info = get_info_msgs(lang)
 menu = get_topmenu(lang)
 
 masterc = Config(config_file="config.yml")
-supa_url: str = os.environ.get("SUPABASE_URL")
-supa_key: str = os.environ.get("SUPABASE_KEY")
+supa_url: str = config['SUPABASE_URL'] 
+supa_key: str = config['SUPABASE_KEY'] 
+passkey: str = config['PASSKEY'] # temporary fix for supabase for now
+
+
 supabase: Client = create_client(supa_url, supa_key)
 fee_base = 21
 fee_percent = 0.01
@@ -66,7 +69,7 @@ template_file = 'templates/inlet_tiger_cut.svg'
 
 async def bot_create_user(telegram_name):
     async with ClientSession() as session:
-        wallet_config = await create_user(telegram_name, masterc, supabase, session)
+        wallet_config = await create_user(telegram_name, masterc, supabase, session, passkey)
         return wallet_config
 
 

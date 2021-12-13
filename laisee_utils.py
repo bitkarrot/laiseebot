@@ -261,13 +261,13 @@ async def delete_lnaddress(session: ClientSession, wallet_config: LConfig):
 
 
 
-async def create_laisee_user(telegram_name: str, config, session: ClientSession, supabase: Client): 
+async def create_laisee_user(telegram_name: str, config, session: ClientSession, supabase: Client, passkey: str): 
     um = UserManager(config, session)
     lnbits_url = config.lnbits_url
     adminkey = config.admin_key
 
     laisee_email: str = telegram_name + "@laisee.org"
-    passkey: str = os.environ.get("PASSKEY")
+    # passkey: str = os.environ.get("PASSKEY")
     random_password = passkey
     user = supabase.auth.sign_up(email=laisee_email, password=random_password, phone=None)
     print(f'Sign up new user: {user} \n')
