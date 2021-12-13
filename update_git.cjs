@@ -1,20 +1,21 @@
 const shellJs = require('shelljs')
 const fs = require('fs')
 const path = require('path');
-require('dotenv').config();
+const yaml = require('js-yaml');
 
 // no error checking, use at your own risk. 
 const git_repo_path = 'public/.well-known/lnurlp/'
 const repo_name = '/laisee-frontpage'
 
-const USER = 'bitkarrot';
+const USER = 'sendlaisee';
 const REPO = 'github.com/bitkarrot' + repo_name;
 const dirPath = path.join(__dirname,  "../" + repo_name);
 console.log("dirPath: ", dirPath)
 
-const PASS = process.env.GITPASS
-console.log('PASS TOKEN: ', process.env.GITPASS)
-
+let fileContents = fs.readFileSync('./config.yml', 'utf8');
+let data = yaml.load(fileContents);
+const PASS = data['GITPASS']
+console.log("GITPASS: " , PASS)
 const git = require('simple-git')();
 const remote = `https://${USER}:${PASS}@${REPO}`;
 

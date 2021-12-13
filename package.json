@@ -3,6 +3,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^1.28.1",
     "dotenv": "^10.0.0",
+    "fs": "^0.0.1-security",
+    "js-yaml": "^4.1.0",
     "shelljs": "^0.8.4",
     "simple-git": "^2.47.0"
   }
