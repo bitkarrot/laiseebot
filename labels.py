@@ -28,17 +28,15 @@ en_info = {'help': "<< Help message here >>\n\n<< add link to Telegram Help chat
 
 
 en_LNaddress_info = [ "With a Lightning Address you can send sats to this wallet from another service, such as @lntxbot or a lightning enabled wallet. \n\n\n ",
-                    "Top Up Example: /send 1000  username@laisee.org \n\n\n", 
+                    "Top Up Example: /send 1000 username@laisee.org \n\n\n", 
                     "This Lightning Address is currently set to accept between <b> 10 to 10,000 sats maximum in a transaction. </b>\n\n",
                     "If you just created your wallet, please wait a few minutes for the address to deploy. ",
-                    " If your address is active, you should see a QR code when visiting the above link. It may also be visible here as a QR preview. \n\n",
-                    "If you are having trouble accessing the address, please visit the helpdesk.", 
-                    " For more information about Lightning Addresses, please visit lightningaddress.com \n\n "]
+                    "If you are having trouble accessing the Lightning address, please visit the helpdesk."]
 
 
 
 en_send_created = "Congrats! Laisee has been sent to Telegram user."
-en_laisee_created =  "Congrats! here is your Laisee image. You can now forward this to anyone you like. << fill in more details here>> \n"
+en_laisee_created =  "Congrats! here is your Laisee image. You can now forward this to anyone you like. \n\nRemember to top up your wallet! \n<< fill in more details here>> \n"
 
 
 # Top Menu Buttons

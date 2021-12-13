@@ -2,7 +2,6 @@
 from labels import get_info_msgs, get_topmenu, get_lnaddress_info, en_laisee_created
 from aiohttp.client import ClientSession
 from supabase import create_client, Client
-import os
 from pylnbits.config import Config
 from pylnbits.user_wallet import UserWallet
 from pylnbits.lnurl_p import LnurlPay
@@ -12,6 +11,7 @@ from local_config import LConfig
 from client_methods import create_user, delete_user, get_user
 from laisee_utils import get_QRimg, create_lnaddress, delete_lnaddress, create_laisee_qrcode, convertSVG
 import datetime as dt
+import json
 
 from telethon import TelegramClient, events, Button
 
@@ -271,14 +271,20 @@ async def callback(event):
         msg = f'Ok, I will make a Laisee with {amt} sats plus fees, please give me a moment...'
         await event.reply(msg)
         output_png, fee_amt = await get_laisee_img(int(amt), wallet_config)
+        total = int(amt) + fee_amt
         await client.send_file(event.sender_id, output_png)
         await client.send_message(event.sender_id, en_laisee_created)
-        await client.send_message(event.sender_id, f'total fees: {fee_amt}')
+        await client.send_message(event.sender_id, f'total: {str(int(amt))} laisee + {fee_amt} fee = {str(total)} sats')
         
 
     if query_name == 'Lnbits Url':
         link = await wallet_config.get_lnbits_link()
         msg = f"This is your link to the LNBits interface:\n {link}"
+        await event.reply(msg)
+
+    if query_name == 'More Lightning Address Info': 
+        msg = "\nTo check if the address is active: https://sendsats.to/qr/" + telegram_name + "@laisee.org\n\n"
+        msg = ' '.join(get_lnaddress_info('en')) + msg
         await event.reply(msg)
 
 
@@ -317,15 +323,17 @@ async def handler(event):
         await client.send_file(event.chat_id, qrimg, caption=lnurl)
         msg = "\n\nYour Lightning Address is <b> " + username + "@laisee.org</b> and is Case Sensitive. \n\n"
         msg = msg  + "If you just created your wallet, please wait a few minutes for the address to deploy\n"
-        await client.send_message(event.sender_id, msg)
+        ln_info = "More Lightning Address Info"
+        await client.send_message(event.sender_id, msg, buttons=Button.inline(ln_info,ln_info))
+ 
 
 
     if menu['settings'] == input:
         msg = info['settings']
         settings = menu['setopts']
         set_buttons = get_buttons(settings)
-        set_split = split(set_buttons, 1)
-        await client.send_message(event.sender_id, msg, buttons=set_split)
+        msg_split = split(set_buttons, 1)
+        await client.send_message(event.sender_id, msg, buttons=msg_split)
 
     ### send TG laisee ###
     if menu['send'] == input:
@@ -402,36 +410,56 @@ async def handler(event):
                 print(e)
                 await client.send_message(event.sender_id, f'Not a valid Telegram User. @{receiver}')
                 return
+
             # get receiver wallet config
             receiver_config = await bot_get_user(receiver)
             async with ClientSession() as session:
-                recv_wallet = UserWallet(config=receiver_config, session=session)
-                bolt11 = await recv_wallet.create_invoice(direction=False, amt=amt, memo="laisee", webhook="")
-                send_wallet = UserWallet(config=wallet_config, session=session)
-                # CHECK FOR INSUFFICIENT BALANCE ERRORS
-                # {"id": <string>, "name": <string>, "balance": <int>}
-                sendinfo = await send_wallet.get_wallet_details()
-                balance = float(sendinfo['balance'])/1000                
-                fee_amt = int(amt * fee_percent) + fee_base
-                if balance-fee_amt < amt:
-                    await client.send_message(event.send_id, f'insufficient balance to send: {balance}')
-                    return
-                # send pay invoice
-                payhash = await send_wallet.pay_invoice(direction=True, bolt11=bolt11)
-                print(f'>>>>> payhash : {payhash}')
-                inv_check = send_wallet.check_invoice(payhash)
-                # notify sender and recipient
-                if inv_check['paid']:
-                    await client.send_file(recv_id, './images/honeybadger.jpeg')
-                    await client.send_message(recv_id, f" Kung Hei Fat Choy! You've received a laisee from @{username}\n")
-                    recvinfo = await recv_wallet.get_wallet_details()
-                    await client.send_message(recv_id, str(recvinfo))
+                try: 
+                    recv_wallet = UserWallet(config=receiver_config, session=session)
+                    recvwallet = await recv_wallet.get_wallet_details()
+                    print(f"recvr wallet info : {recvwallet}")
 
-                    await client.send_message(event.sender_id, f'Sent Laisee to your recipient! @{receiver}')
+                    bolt11 = await recv_wallet.create_invoice(direction=False, amt=int(amt), memo="laisee", webhook="https://laisee.org")
+                    # if 'payment_request' in bolt11:
+                    send_wallet = UserWallet(config=wallet_config, session=session)
+
+                    # CHECK FOR INSUFFICIENT BALANCE ERRORS
+                    # {"id": <string>, "name": <string>, "balance": <int>}
                     sendinfo = await send_wallet.get_wallet_details()
-                    await client.send_message(event.sender_id, str(sendinfo))
-                else: 
-                    await client.send_message(event.sender_id, "Error sending Laisee")
+                    balance = float(sendinfo['balance'])/1000                
+                    fee_amt = int(amt * fee_percent) + fee_base
+                    if balance-fee_amt < amt:
+                        await client.send_message(event.sender_id, f'insufficient balance to send: {balance}')
+                        return
+                    
+                    # send pay invoice
+                    payhash = await send_wallet.pay_invoice(direction=True, bolt11=bolt11['payment_request'])
+                    # print(f'>>>>> payhash : {payhash}')
+                    payment_hash = "/"+payhash['payment_hash']   # TODO Fix bug in pylnbits 
+                    #print(f'paymenthash: {payment_hash} ')
+                    inv_check = await send_wallet.check_invoice(payment_hash)
+                    inv_content = json.dumps(inv_check)
+                    print(f'inv check: {inv_content}')
+                    
+                    # notify sender and recipient
+                    if inv_check['paid']:
+                        await client.send_file(recv_id, './images/laisee.png')
+                        await client.send_message(recv_id, f" Kung Hei Fat Choy! You've received a laisee from @{username} for {amt} sats.\n")
+                        recvinfo = await recv_wallet.get_wallet_details()
+                        await client.send_message(recv_id, str(recvinfo))
+
+                        await client.send_message(event.sender_id, f'Sent Laisee to your recipient! @{receiver}')
+                        sendinfo = await send_wallet.get_wallet_details()
+                        await client.send_message(event.sender_id, str(sendinfo))
+                    else: 
+                        await client.send_message(event.sender_id, "Error sending Laisee")
+
+                except Exception as e: 
+                    print(f'Exception: {e}')
+                    if 'message' in bolt11: # error can't get bolt11
+                        await client.send_message(event.sender_id, bolt11['message'])
+                        print(f'bolt11: {bolt11}')
+                        return
 
         else:
             msg = "Looks like there isn't enough info to send, please give an amount and a recipient\n"
