@@ -375,46 +375,91 @@ async def handler(event):
         msg = sats_convert(input)
         await event.reply(msg)
 
+
     if ('/laisee' in input):
         await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
-        # create image w/lnurlw
-        params = input.split(' ')
-        if len(params) == 2:
-            print(params[1])
-            amt = int(params[1])
-            output_png, fee_amt = await get_laisee_img(amt, wallet_config)
-            await client.send_file(event.sender_id, output_png)
-            await client.send_message(event.sender_id, en_laisee_created)
-            await client.send_message(event.sender_id, f'total fees: {fee_amt}')
-        else: 
-            msg = "Looks like there isn't an amount or sufficient balance to send\n"
-            msg = msg + "\nExample: <b>/laisee 100 </b>"
-            await event.reply(msg)
+        try:
+            # create image w/lnurlw
+            params = input.split(' ')
+            if len(params) == 2:
+                print(params[1])
+                amt = int(params[1])
+                output_png, fee_amt = await get_laisee_img(amt, wallet_config)
+                await client.send_file(event.sender_id, output_png)
+                await client.send_message(event.sender_id, en_laisee_created)
+                await client.send_message(event.sender_id, f'total fees: {fee_amt}')
+            else: 
+                msg = "Looks like there isn't an amount or sufficient balance to send\n"
+                msg = msg + "\nExample: <b>/laisee 100 </b>"
+                await event.reply(msg)
+        except Exception as e:
+                print(e)
+                msg = "Error creating laisee: " + str(e)
+                await event.reply(msg)
+
+
+    if ('/invoice' in input):            
+            try:
+                params = input.split(' ')
+                if len(params) == 2:
+                    print(params[1])
+                    amt = int(params[1])
+                    async with ClientSession() as session:
+                        uw = UserWallet(config=wallet_config, session=session)
+                        bolt11json = await uw.create_invoice(direction=False, amt=amt, memo="laisee invoice", webhook="https://laisee.org")
+                        inv_content = json.dumps(bolt11json)
+                        print(inv_content)
+
+                        bolt11_inv = bolt11json['payment_request']
+                        await client.send_message(event.sender_id, bolt11_inv)
+                else: 
+                    msg = "Looks like there isn't enough info to send, please give an amount to create an invoice\n"
+                    msg = msg + "\nExample: <b>/invoice 100</b>"
+                    await event.reply(msg)
+            except Exception as e:
+                print(e)
+                msg = "Error creating invoice: " + str(e)
+                await event.reply(msg)
+
 
 
     if ('/send' in input):
         # TODO: factor out into separate method
-        await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
+        await client.send_message(event.sender_id, f'Okay, give me a moment to process this....')
         params = input.split(' ')
         if len(params) == 3:
-            print(params[1], params[2])
-            amt = float(params[1])
-            receiver = params[2].split('@')[1]
-            print(receiver)   
-            # check if user exists
             try:
+                print(params[1], params[2])
+                amt = float(params[1])
+            except ValueError as e: 
+                await client.send_message(event.sender_id, f'Not a valid amount')
+                return
+            try:
+                receiver = params[2].split('@')[1]
+                print(receiver)   
+                # check if user exists
                 recv_id = await client.get_peer_id(receiver)
                 print(f'peer user id : {recv_id}')
                 print(f'sender id : { event.sender_id }')
+                                # get receiver wallet config
+                receiver_config = await bot_get_user(receiver)
+                print(f'receiver_config: {receiver_config}')
+                if receiver_config is None:
+                    raise Exception("No conversation yet")
+
             except ValueError as e: 
                 print(e)
                 await client.send_message(event.sender_id, f'Not a valid Telegram User. @{receiver}')
                 return
+            except IndexError as e: 
+                await client.send_message(event.sender_id, f'Invalid format. Here is an Example: <b>/send 100 @username</b>" ')
+                return
+            except Exception as e: 
+                await client.send_message(event.sender_id, f' This user has not started a conversation yet with @laiseebot')
+                return
 
-            # get receiver wallet config
-            receiver_config = await bot_get_user(receiver)
-            async with ClientSession() as session:
-                try: 
+            try: 
+                async with ClientSession() as session:
                     recv_wallet = UserWallet(config=receiver_config, session=session)
                     recvwallet = await recv_wallet.get_wallet_details()
                     print(f"recvr wallet info : {recvwallet}")
@@ -454,13 +499,13 @@ async def handler(event):
                     else: 
                         await client.send_message(event.sender_id, "Error sending Laisee")
 
-                except Exception as e: 
-                    print(f'Exception: {e}')
-                    if 'message' in bolt11: # error can't get bolt11
-                        await client.send_message(event.sender_id, bolt11['message'])
-                        print(f'bolt11: {bolt11}')
-                        return
-
+            except Exception as e: 
+                print(f'Exception: {e}')
+                # await client.send_message(event.sender_id, str(e))
+                if 'message' in bolt11: # error can't get bolt11
+                    await client.send_message(event.sender_id, bolt11['message'])
+                    print(f'bolt11: {bolt11}')
+                    return
         else:
             msg = "Looks like there isn't enough info to send, please give an amount and a recipient\n"
             msg = msg + "\nExample: <b>/send 100 @username</b>"
