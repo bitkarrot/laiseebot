@@ -377,6 +377,14 @@ async def handler(event):
         await event.reply(msg)
 
 
+    if ('/balance' in input):
+        if wallet_config is not None:
+            async with ClientSession() as session:
+                balance = await get_balance(session, wallet_config)
+                msg = f'Your Wallet Balance: {str(balance)} sats'
+                await client.send_message(event.sender_id, msg)
+
+
     if ('/laisee' in input):
         await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
         try:
@@ -472,9 +480,9 @@ async def handler(event):
                     # {"id": <string>, "name": <string>, "balance": <int>}
                     sendinfo = await send_wallet.get_wallet_details()
                     balance = float(sendinfo['balance'])/1000                
-                    fee_amt = int(amt * fee_percent) + fee_base
+                    fee_amt = 1 # int(amt * fee_percent) + fee_base
                     if balance-fee_amt < amt:
-                        await client.send_message(event.sender_id, f'insufficient balance to send: {balance}')
+                        await client.send_message(event.sender_id, f'insufficient balance to send: {balance}, fee amount: {fee_amt}')
                         return
                     
                     # send pay invoice
