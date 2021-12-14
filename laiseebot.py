@@ -319,9 +319,11 @@ async def handler(event):
         msg = msg +  f"<b>Min Deposit:</b> {link['min']} sats\n<b>Max Deposit:</b> {link['max']} sats\n" 
         lnurl = link['lnurl']
         qrimg = get_QRimg(username, lnurl)
-        msg = msg +  "\n" + "<b>Scan me to deposit!</b>"
-        await client.send_message(event.sender_id, msg)
-        await client.send_file(event.chat_id, qrimg, caption=lnurl)
+        if type(qrimg) == str: 
+            msg = msg +  "\n" + "<b>Scan me to deposit!</b>"
+            await client.send_message(event.sender_id, msg)
+            await client.send_file(event.chat_id, file=qrimg)
+        await client.send_message(event.chat_id, lnurl)
         msg = "\n\nYour Lightning Address is <b> " + username + "@laisee.org</b> and is Case Sensitive. \n\n"
         msg = msg  + "If you just created your wallet, please wait a few minutes for the address to deploy\n"
         ln_info = "More Lightning Address Info"
