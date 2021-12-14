@@ -75,7 +75,7 @@ def convertSVG(svgimg, withdraw_id):
     with open(output, 'w') as f:
         f.write(svgimg)
         f.close()
-    subprocess.run(['rsvg-convert', output, '-o', pngfile, '-w' , '600', '-b', 'white'], cwd=".")
+    subprocess.run(['rsvg-convert', output, '-o', pngfile, '-w' , '300', '-b', 'white'], cwd=".")
     return pngfile
 
 
