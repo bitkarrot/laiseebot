@@ -97,6 +97,7 @@ async def check_user_exists(username):
         else: 
             return False
     except ValueError as e: 
+        logger.info(str(e))
         return e
 
 
@@ -205,7 +206,7 @@ async def alerthandler(event):
     await client.send_message(event.sender_id, "1 HKD is currently worth " + sats_msg)
     # only use for testing
     userlink = await wallet_config.get_lnbits_link()
-    await client.send_message(event.sender_id, f'For testing purposes only: {userlink}')
+    await client.send_message(event.sender_id, f'Link For Testing only: \n{userlink} \n\n <b>Testnet: Max Send and Receive is 500 sats (lnpay.co backend)</b> \n')
 
     # Create lightning address - first check does it exist for this wallet? 
     async with ClientSession() as session:
@@ -417,7 +418,7 @@ async def handler(event):
                     msg = msg + "\nExample: <b>/invoice 100</b>"
                     await event.reply(msg)
             except Exception as e:
-                print(e)
+                logger.info("error creating invoice" + str(e))
                 msg = "Error creating invoice: " + str(e)
                 await event.reply(msg)
 
@@ -465,7 +466,6 @@ async def handler(event):
                     print(f"recvr wallet info : {recvwallet}")
 
                     bolt11 = await recv_wallet.create_invoice(direction=False, amt=int(amt), memo="laisee", webhook="https://laisee.org")
-                    # if 'payment_request' in bolt11:
                     send_wallet = UserWallet(config=wallet_config, session=session)
 
                     # CHECK FOR INSUFFICIENT BALANCE ERRORS
@@ -500,7 +500,7 @@ async def handler(event):
                         await client.send_message(event.sender_id, "Error sending Laisee")
 
             except Exception as e: 
-                print(f'Exception: {e}')
+                logger.info("in /send: " + str(e))
                 # await client.send_message(event.sender_id, str(e))
                 if 'message' in bolt11: # error can't get bolt11
                     await client.send_message(event.sender_id, bolt11['message'])
