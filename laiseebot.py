@@ -227,6 +227,7 @@ async def callback(event):
     wallet_config = await bot_get_user(telegram_name)
 
     ### settings ###
+    '''
     if query_name == 'Delete Wallet':
         msg = "OK, please give me a moment ....."
         await event.edit(msg)
@@ -245,7 +246,7 @@ async def callback(event):
         else: 
             delete_msg = "Having trouble deleting your wallet, please contact an admin via helpdesk"
             await event.edit(delete_msg)
-
+    '''
 
     if query_name == 'Defund Wallet':
         withdraw_id, svgimg = await defund_wallet(wallet_config)
