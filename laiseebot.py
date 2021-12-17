@@ -62,8 +62,8 @@ passkey: str = config['PASSKEY'] # temporary fix for supabase for now
 
 
 supabase: Client = create_client(supa_url, supa_key)
-fee_base = 21
-fee_percent = 0.01
+fee_base = 0
+fee_percent = 0
 template_file = 'templates/inlet_tiger_cut.svg'
 
 
@@ -124,17 +124,18 @@ async def QR_Topup(wallet_config):
 
 
 async def get_laisee_img(amt: int, wallet_config: str):
-    fee_amt = (float(amt) * fee_percent) + fee_base
-    send_amt = float(amt) + fee_amt
+    #fee_amt = (float(amt) * fee_percent) + fee_base
+    fee_amt = 0
+    #send_amt = float(amt) + fee_amt
 
     async with ClientSession() as session:
         lw = LnurlWithdraw(wallet_config, session)
         # creates link, doesn't check balance
         # must be of integer type
-        title = f'Laisee amount: {int(send_amt)}'
+        title = f'Laisee amount: {int(amt)}'
         body = {"title": title, 
-            "min_withdrawable": int(send_amt),
-            "max_withdrawable": int(send_amt), 
+            "min_withdrawable": int(amt),
+            "max_withdrawable": int(amt), 
             "uses": 1, 
             "wait_time": 1, 
             "is_unique": True }
@@ -276,7 +277,8 @@ async def callback(event):
         total = int(amt) + fee_amt
         await client.send_file(event.sender_id, output_png)
         await client.send_message(event.sender_id, en_laisee_created)
-        await client.send_message(event.sender_id, f'total: {str(int(amt))} laisee + {fee_amt} fee = {str(total)} sats')
+        await client.send_message(event.sender_id, f'total: {str(int(amt))} sats for laisee')
+#        await client.send_message(event.sender_id, f'total: {str(int(amt))} laisee + {fee_amt} fee = {str(total)} sats')
         
 
     if query_name == 'Lnbits Url':
