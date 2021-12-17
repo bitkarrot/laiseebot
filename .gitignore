@@ -147,3 +147,4 @@ node_modules
 laisee-frontpage
 scratch
 *.txt
+prod_config.yml
