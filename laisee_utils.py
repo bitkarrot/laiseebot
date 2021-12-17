@@ -185,7 +185,7 @@ async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
                 "amount": 10,
                 "max": 10000,
                 "min": 10,
-                "comment_chars": 100}
+                "comment_chars": 0}
 
         newlink = await lnurlp.create_paylink(body=body)
         pay_id = newlink['id']
