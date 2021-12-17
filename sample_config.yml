@@ -1,0 +1,27 @@
+# MAKE SURE THERE IS A SPACE BETWEEN THE : AND THE '' OR ELSE THIS WONT WORK
+# telegram tokens
+bot_token: ''
+api_hash: 3a9......
+api_id: 1....
+session_name: 'YOURBOTNAME'
+# Session name. Only one session (with a unique session name) can run at a time
+
+LNBITS_ADMIN: 'https://yourinstanceoflnbits.com'
+
+# api_key from LNbits User Manager Extension
+lnbits_url: "...."
+in_key: "781...."
+admin_key: "3....."
+
+SUPABASE_URL: ""
+SUPABASE_KEY: ""
+SUPABASE_PUB_KEY: ""
+
+# this is a dummy password with 200+ bits for all supabase new users
+# because we are creating w/telegram and not by email (yet) 
+PASSKEY: "5L7........."
+
+# FORK THE REPO AND RUN YOUR OWN FORK PLEASE
+# https://github.com/bitkarrot/laisee-frontpage
+GITPASS: 'gh.......'
+
