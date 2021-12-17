@@ -136,7 +136,7 @@ async def get_laisee_img(amt: int, wallet_config: str):
             "min_withdrawable": int(send_amt),
             "max_withdrawable": int(send_amt), 
             "uses": 1, 
-            "wait_time": 3600, 
+            "wait_time": 1, 
             "is_unique": True }
         newlink = await lw.create_withdrawlink(body)
         print(f"create withdraw link with body: {body}, result link: {newlink} \n")
