@@ -252,7 +252,7 @@ async def callback(event):
     if query_name == 'Defund Wallet':
         withdraw_id, svgimg = await defund_wallet(wallet_config)
         if withdraw_id:
-            link = wallet_config.lnbits_url + "/withdraw/img/" + withdraw_id
+            link = wallet_config.lnbits_url + "/withdraw/" + withdraw_id
             # link points to QR Code
             msg = f"Here is your withdraw link: {link}"
             await event.reply(msg)
