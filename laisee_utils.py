@@ -43,7 +43,7 @@ def create_laisee_qrcode(lnurl: str, idnumber: str, expires: str, sats: str, tem
         pyqr = pyqrcode.create(lnurl,  error='H')
 
         # change your QR code foreground and background colors here
-        pyqr.png(lnurl_file, scale=3, module_color=[170,0,0,255], background=[255, 255, 255])
+        pyqr.png(lnurl_file, scale=3, module_color=[91,17,16,255], background=[220, 184, 102])
     
         with open(lnurl_file, 'rb') as fp:
             data = fp.read()
@@ -63,7 +63,7 @@ def create_laisee_qrcode(lnurl: str, idnumber: str, expires: str, sats: str, tem
         with open(output_svg, 'w') as f:
             f.write(msg)
             f.close()
-        subprocess.run(['rsvg-convert', output_svg, '-o', output_png, '-w' , '600'], cwd=".")
+        subprocess.run(['rsvg-convert', output_svg, '-o', output_png, '-w' , '600', '-b', 'red'], cwd=".")
         return output_png
     except Exception as e: 
         return str(e)
@@ -75,7 +75,7 @@ def convertSVG(svgimg, withdraw_id):
     with open(output, 'w') as f:
         f.write(svgimg)
         f.close()
-    subprocess.run(['rsvg-convert', output, '-o', pngfile, '-w' , '300', '-b', 'white'], cwd=".")
+    subprocess.run(['rsvg-convert', output, '-o', pngfile, '-w' , '300'], cwd=".")
     return pngfile
 
 
@@ -181,11 +181,11 @@ async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
         # create lnurlp link, add to github in file called 'telegram_name'
         lnurlp = LnurlPay(wallet_config, session)
         # create pay link
-        body = {"description": "LN address for " + laisee_email,
+        body = {"description": "Pay to " + laisee_email,
                 "amount": 10,
                 "max": 10000,
                 "min": 10,
-                "comment_chars": 100}
+                "comment_chars": 0}
 
         newlink = await lnurlp.create_paylink(body=body)
         pay_id = newlink['id']

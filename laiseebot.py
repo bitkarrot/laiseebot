@@ -12,6 +12,7 @@ from client_methods import create_user, delete_user, get_user
 from laisee_utils import get_QRimg, create_lnaddress, delete_lnaddress, create_laisee_qrcode, convertSVG
 import datetime as dt
 import json
+import time
 
 from telethon import TelegramClient, events, Button
 
@@ -62,8 +63,8 @@ passkey: str = config['PASSKEY'] # temporary fix for supabase for now
 
 
 supabase: Client = create_client(supa_url, supa_key)
-fee_base = 21
-fee_percent = 0.01
+fee_base = 0
+fee_percent = 0
 template_file = 'templates/inlet_tiger_cut.svg'
 
 
@@ -124,28 +125,33 @@ async def QR_Topup(wallet_config):
 
 
 async def get_laisee_img(amt: int, wallet_config: str):
-    fee_amt = (float(amt) * fee_percent) + fee_base
-    send_amt = float(amt) + fee_amt
+    #fee_amt = (float(amt) * fee_percent) + fee_base
+    fee_amt = 0
+    #send_amt = float(amt) + fee_amt
 
-    async with ClientSession() as session:
-        lw = LnurlWithdraw(wallet_config, session)
-        # creates link, doesn't check balance
-        # must be of integer type
-        title = f'Laisee amount: {int(send_amt)}'
-        body = {"title": title, 
-            "min_withdrawable": int(send_amt),
-            "max_withdrawable": int(send_amt), 
-            "uses": 1, 
-            "wait_time": 3600, 
-            "is_unique": True }
-        newlink = await lw.create_withdrawlink(body)
-        print(f"create withdraw link with body: {body}, result link: {newlink} \n")
-        withdraw_id = newlink['id']
-        lnurl = newlink['lnurl']
-        # always expires 3 months from now
-        expires = str(dt.datetime.now() + dt.timedelta(days=365.25/4)).split(' ')[0]        
-        output_png = create_laisee_qrcode(lnurl, withdraw_id, expires, str(amt), template_file)
-        return output_png, fee_amt
+    status = await check_balance(wallet_config, amt)
+    if status is True: 
+        async with ClientSession() as session:
+            lw = LnurlWithdraw(wallet_config, session)
+            # creates link, doesn't check balance
+            # must be of integer type
+            title = f'Laisee amount: {int(amt)}'
+            body = {"title": title, 
+                "min_withdrawable": int(amt),
+                "max_withdrawable": int(amt), 
+                "uses": 1, 
+                "wait_time": 1, 
+                "is_unique": True }
+            newlink = await lw.create_withdrawlink(body)
+            print(f"create withdraw link with body: {body}, result link: {newlink} \n")
+            withdraw_id = newlink['id']
+            lnurl = newlink['lnurl']
+            # always expires 3 months from now
+            expires = str(dt.datetime.now() + dt.timedelta(days=365.25/4)).split(' ')[0]        
+            output_png = create_laisee_qrcode(lnurl, withdraw_id, expires, str(amt), template_file)
+            return output_png, fee_amt
+    else: 
+        return None, 0
 
 
 async def get_balance(session, wallet_config) -> float:
@@ -174,6 +180,49 @@ async def defund_wallet(wallet_config):
             return withdraw_id, svgimg
         else: 
             return False, False
+
+
+async def get_created_laisee(session, wallet_config):
+    if wallet_config is not None:
+        lw = LnurlWithdraw(wallet_config, session)
+        links = await lw.list_withdrawlinks()
+        total_laisee_amt = 0 
+        entries = []
+        for item in links: 
+            if 'Laisee' in item['title']: 
+                wtitle = item['title'] + " sats "
+                wamt = item['max_withdrawable']
+                total_laisee_amt += wamt
+                wlink = wallet_config.lnbits_url + "/withdraw/" + item['id']
+                wdate = time.ctime(item['open_time'])
+                entry = "<a href=\"" + wlink + "\">" + wtitle + "</a> created: " + wdate
+                entries.append(entry)
+        return entries, total_laisee_amt
+    else:
+        return None, None
+
+
+async def client_balance(wallet_config):
+    async with ClientSession() as session:
+        entries, total_laisee_amt = await get_created_laisee(session, wallet_config)
+        balance = await get_balance(session, wallet_config)
+        avail_balance  = balance  - total_laisee_amt
+
+    msg = "Current Balance in Wallet: " + str(balance) + "\n"
+    msg += "Total Amount Allocated to Laisee: " + str(total_laisee_amt) + "\n"
+    msg += "<b>Available Balance for New Laisee: " + str(avail_balance) + "</b>\n\n"
+    return msg, entries
+
+
+async def check_balance(wallet_config, alloc_amt): 
+    async with ClientSession() as session:
+        entries, total_laisee_amt = await get_created_laisee(session, wallet_config)
+        balance = await get_balance(session, wallet_config)
+        avail_balance  = balance  - total_laisee_amt
+        if alloc_amt > avail_balance + 1: 
+            return False
+        else: 
+            return True 
 
 
 
@@ -227,7 +276,7 @@ async def callback(event):
     wallet_config = await bot_get_user(telegram_name)
 
     ### settings ###
-    '''
+    
     if query_name == 'Delete Wallet':
         msg = "OK, please give me a moment ....."
         await event.edit(msg)
@@ -246,12 +295,12 @@ async def callback(event):
         else: 
             delete_msg = "Having trouble deleting your wallet, please contact an admin via helpdesk"
             await event.edit(delete_msg)
-    '''
+    
 
     if query_name == 'Defund Wallet':
         withdraw_id, svgimg = await defund_wallet(wallet_config)
         if withdraw_id:
-            link = wallet_config.lnbits_url + "/withdraw/img/" + withdraw_id
+            link = wallet_config.lnbits_url + "/withdraw/" + withdraw_id
             # link points to QR Code
             msg = f"Here is your withdraw link: {link}"
             await event.reply(msg)
@@ -273,10 +322,14 @@ async def callback(event):
         msg = f'Ok, I will make a Laisee with {amt} sats plus fees, please give me a moment...'
         await event.reply(msg)
         output_png, fee_amt = await get_laisee_img(int(amt), wallet_config)
-        total = int(amt) + fee_amt
+        if output_png is None:
+            await client.send_message(event.sender_id, "Insufficient Balance available to create new laisee.")
+            return
+        # total = int(amt) + fee_amt
         await client.send_file(event.sender_id, output_png)
         await client.send_message(event.sender_id, en_laisee_created)
-        await client.send_message(event.sender_id, f'total: {str(int(amt))} laisee + {fee_amt} fee = {str(total)} sats')
+        await client.send_message(event.sender_id, f'total: {str(int(amt))} sats for laisee')
+        # await client.send_message(event.sender_id, f'total: {str(int(amt))} laisee + {fee_amt} fee = {str(total)} sats')
         
 
     if query_name == 'Lnbits Url':
@@ -354,6 +407,11 @@ async def handler(event):
         amt_split = split(amt_buttons, 4)
         await client.send_message(event.sender_id, msg, buttons=amt_split)
 
+        msg, entries = await client_balance(wallet_config)
+        await client.send_message(event.sender_id, msg)
+        entry_msg = 'To see created laisee: `/entries`'
+        await client.send_message(event.sender_id, entry_msg)
+
 
     if menu['balance'] == input:
         if wallet_config is not None:
@@ -388,6 +446,23 @@ async def handler(event):
                 await client.send_message(event.sender_id, msg)
 
 
+    if ('/details' in input):
+        msg, entries = await client_balance(wallet_config)
+        await client.send_message(event.sender_id, msg)
+        entry_msg = 'To see created laisee: `/entries`'
+        await client.send_message(event.sender_id, entry_msg)
+
+
+    if ('/entries' in input):
+        async with ClientSession() as session:
+            entries, total_laisee_amt = await get_created_laisee(session, wallet_config)
+            for i in entries:
+                await client.send_message(event.sender_id, i)
+            totals = "Total Laisee Created:  " + str(len(entries))
+            await client.send_message(event.sender_id, totals)
+                
+
+
     if ('/laisee' in input):
         await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
         try:
@@ -397,6 +472,9 @@ async def handler(event):
                 print(params[1])
                 amt = int(params[1])
                 output_png, fee_amt = await get_laisee_img(amt, wallet_config)
+                if output_png is None:
+                    await client.send_message(event.sender_id, "Insufficient Balance available to create new laisee.")
+                    return
                 await client.send_file(event.sender_id, output_png)
                 await client.send_message(event.sender_id, en_laisee_created)
                 await client.send_message(event.sender_id, f'total fees: {fee_amt}')
