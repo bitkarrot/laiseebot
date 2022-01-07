@@ -1,5 +1,5 @@
 # from requests.sessions import merge_setting
-from labels import get_info_msgs, get_topmenu, get_lnaddress_info, en_laisee_created
+from labels import get_info_msgs, get_topmenu, get_lnaddress_info, en_laisee_created, get_help_info
 from aiohttp.client import ClientSession
 from supabase import create_client, Client
 from pylnbits.config import Config
@@ -55,6 +55,7 @@ client.parse_mode = 'html'
 lang = 'en'
 info = get_info_msgs(lang)
 menu = get_topmenu(lang)
+helpinfo = get_help_info(lang)
 
 masterc = Config(config_file="config.yml")
 supa_url: str = config['SUPABASE_URL'] 
@@ -126,7 +127,7 @@ async def QR_Topup(wallet_config):
 
 async def get_laisee_img(amt: int, wallet_config: str):
     #fee_amt = (float(amt) * fee_percent) + fee_base
-    fee_amt = 0
+    #fee_amt = 0
     #send_amt = float(amt) + fee_amt
 
     status = await check_balance(wallet_config, amt)
@@ -149,7 +150,7 @@ async def get_laisee_img(amt: int, wallet_config: str):
             # always expires 3 months from now
             expires = str(dt.datetime.now() + dt.timedelta(days=365.25/4)).split(' ')[0]        
             output_png = create_laisee_qrcode(lnurl, withdraw_id, expires, str(amt), template_file)
-            return output_png, fee_amt
+            return output_png, withdraw_id
     else: 
         return None, 0
 
@@ -255,7 +256,7 @@ async def alerthandler(event):
     await client.send_message(event.sender_id, "1 HKD is currently worth " + sats_msg)
     # only use for testing
     userlink = await wallet_config.get_lnbits_link()
-    await client.send_message(event.sender_id, f'Link For Testing only: \n{userlink} \n\n <b>Testnet: Max Send and Receive is 500 sats (lnpay.co backend)</b> \n')
+    # await client.send_message(event.sender_id, f'Link For Testing only: \n{userlink} \n\n <b>Testnet: Max Send and Receive is 500 sats (lnpay.co backend)</b> \n')
 
     # Create lightning address - first check does it exist for this wallet? 
     async with ClientSession() as session:
@@ -321,16 +322,15 @@ async def callback(event):
         amt = query_name
         msg = f'Ok, I will make a Laisee with {amt} sats plus fees, please give me a moment...'
         await event.reply(msg)
-        output_png, fee_amt = await get_laisee_img(int(amt), wallet_config)
+        output_png, withdraw_id = await get_laisee_img(int(amt), wallet_config)
         if output_png is None:
             await client.send_message(event.sender_id, "Insufficient Balance available to create new laisee.")
             return
         # total = int(amt) + fee_amt
         await client.send_file(event.sender_id, output_png)
         await client.send_message(event.sender_id, en_laisee_created)
-        await client.send_message(event.sender_id, f'total: {str(int(amt))} sats for laisee')
-        # await client.send_message(event.sender_id, f'total: {str(int(amt))} laisee + {fee_amt} fee = {str(total)} sats')
-        
+        withdraw_link =  masterc.lnbits_url + "/withdraw/" + withdraw_id
+        await client.send_message(event.sender_id, "Backup link in case above image does not scan: " + withdraw_link)        
 
     if query_name == 'Lnbits Url':
         link = await wallet_config.get_lnbits_link()
@@ -369,7 +369,12 @@ async def handler(event):
 
     if menu['topup'] == input:
         link = await QR_Topup(wallet_config)
-        msg = "Here is the Top Up QR Code and LNURL.\n\n"
+        msg = "There are 3 ways to top up your wallet:\n\n"
+        msg += "1. Create a custom invoice amount via the /invoice command\n\n"
+        msg += "2. Use a LNURL QR Code (see below)\n\n"
+        msg += "3. A Lightning Address (see below)\n\n"
+        msg += "=======================\n\n"
+        msg += "Here is the Top Up QR Code and LNURL.\n\n"
         msg = msg +  f"<b>Min Deposit:</b> {link['min']} sats\n<b>Max Deposit:</b> {link['max']} sats\n" 
         lnurl = link['lnurl']
         qrimg = get_QRimg(username, lnurl)
@@ -378,7 +383,7 @@ async def handler(event):
             await client.send_message(event.sender_id, msg)
             await client.send_file(event.chat_id, file=qrimg)
         await client.send_message(event.chat_id, lnurl)
-        msg = "\n\nYour Lightning Address is <b> " + username + "@laisee.org</b> and is Case Sensitive. \n\n"
+        msg = "\n\nYour Lightning Address is <b> " + username + "@laisee.org</b> and is <b>Case Sensitive</b>. \n\n"
         msg = msg  + "If you just created your wallet, please wait a few minutes for the address to deploy\n"
         ln_info = "More Lightning Address Info"
         await client.send_message(event.sender_id, msg, buttons=Button.inline(ln_info,ln_info))
@@ -425,6 +430,12 @@ async def handler(event):
     if menu['help'] == input:
         msg = info['help']
         await client.send_message(event.sender_id, msg)
+        content = '<b>- How to Make Laisee</b>\n\n' + helpinfo['make'] + "\n\n"
+        content += '<b>- Redeem Laisee</b>\n\n' + helpinfo['redeem'] + "\n\n"
+        content += '<b>- Lightning Wallets</b>\n\n See https://laisee.org/wallets for more information \n\n'
+        content += '<b>- Helpdesk:</b>\n\n Visit us at https://t.me/laiseehelpdesk\n\n'
+
+        await client.send_message(event.sender_id, content)
 
     if menu['tools'] == input:
         msg = info['tools']
@@ -471,13 +482,15 @@ async def handler(event):
             if len(params) == 2:
                 print(params[1])
                 amt = int(params[1])
-                output_png, fee_amt = await get_laisee_img(amt, wallet_config)
+                output_png, withdraw_id = await get_laisee_img(amt, wallet_config)
                 if output_png is None:
                     await client.send_message(event.sender_id, "Insufficient Balance available to create new laisee.")
                     return
                 await client.send_file(event.sender_id, output_png)
                 await client.send_message(event.sender_id, en_laisee_created)
-                await client.send_message(event.sender_id, f'total fees: {fee_amt}')
+                withdraw_link =  masterc.lnbits_url + "/withdraw/" + withdraw_id
+                await client.send_message(event.sender_id, "Backup link in case above image does not scan: " + withdraw_link)
+
             else: 
                 msg = "Looks like there isn't an amount or sufficient balance to send\n"
                 msg = msg + "\nExample: <b>/laisee 100 </b>"
