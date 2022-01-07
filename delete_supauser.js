@@ -27,7 +27,5 @@ async function del_user(uuid) {
 
 const args = process.argv.slice(2)
 const uuid = args[0]
-//console.log("uuid given: ", uuid)
-//const uuid = "02176c55-ef63-4275-a699-4277b8c4b24c"
 
 await del_user(uuid)
