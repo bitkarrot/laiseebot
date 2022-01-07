@@ -5,37 +5,27 @@ Telegram Bot for LN Laisees
 - **/help** - get help commands, and a welcome message on how to use the bot
 - **/start** - automatically creates a wallet on LNBITS with LNURLp extension. 
 > * Automatically creates a lnaddress with format of username@laisee.org, based on the telegram username. 
-> * LN address cannot be changed once in play. [ lnbits url, tg username data stored on supabase] -
-> * Issue 3: How do we connect this with the front end where the user registers with their email? 
-> Do we offer this as a paid service? e.g. XXX sats for a forwarder enabled. forwarders must be manually enabled on fastmail, requires human intervention. 
-
 
 ## LaiseeBot Functions
-- **/image** - select an laisee image or upload your own to send and personalize 
 - **/rates** - what daily exchange rate is between sats to hkd and usd
 
 ## transactions
 - **/laisee** - /laisee <amt> username, Sends a laisee to another, has sub menu pick image/msg. 
    cannot send to user if they don't have a telegram account,
-   notify user their recipient needs to start a conversation in order to receive their gift. 
-   
-- **/send** - /send <amt> username or LN address, just sends regular sats as normal
-- **/receive** - /receive <amt> or <any amt> , shows QR code for receiving sats
+   notify user their recipient needs to start a conversation in order to receive their gift.    
+- **/send** - /send <amt> telegram username
+- **/invoice** - /invoice <amt> , generate lightning invoice
    
 ## wallet functionality on lnbits
 - **/balance** - get current wallet balance on lnbits
-- **/lnbits** - get lnbits url so user can access interface directly
-
-## exit functionality - main wallet on lnbits
-- **/delete** - deletes LNBITS wallet, address and stops the bot, adds warning of any sats that are left in wallet will be donated/deleted.
-
+- Top Up Wallet
+   
 ## create LN address [ on start ]
-- **/lnaddress** - view your ln address, email submenu option to add an email forwarder [WARNING: if end user modifies metadata on lnbits or changes TG name, the LN address needs to be updated on github, these two are connected. ]
+   [WARNING: if end user modifies metadata on lnbits or changes TG name, the LN address needs to be updated on github, these two are connected. ]
 
 ## lnurlP extension on lnbits
 - see fill command above, metadata for LN address that must be synced between lnbits and github are below:
     * amount: 100- 100000 sat
-    * accepts commments
     * on success: display message 
     * dispatches webhook to : <<>>
 
@@ -45,32 +35,29 @@ Telegram Bot for LN Laisees
 
 ========
 
-## DEV TODO LIST
+## WIP LIST
 
-1) [Infrastructure] pylnbits module - clean up test cases and add missing methods to access lnbits
+1) [Infrastructure] pylnbits module - clean up unit tests.
     * https://github.com/lightningames/pylnbits.git
 
 2) [Infrastructure] Supabase -  
     * Write a Module - db access for records, use curl methods as current library is incomplete
-    * Data to Store: 
+    * Data: 
       - TG Username
       - LN Address (username@domain.com)
       - LNBits url (e.g. https://bits.bitcoin.org.hk/lnurlp/?usr=XXXXXXX)
       - invoice_key (lnbits, needed for send/receive/lookup functions)
       - admin_key (lnbits, needed to enable extensions and create lnurlp, used with LN Addresses) 
       - Email Address (tied to auth on supabase, accessible via web interface)
-      - optional avatar (web interface)
-      - optional website. (web interface) 
-
-   [ These last two columns were part of the demo from supabase so inherited properties, can remove anytime, esp if avatar images run out of space on data bucket.]  
+      - optional avatar (web interface, for future implementation)
+      - optional website. (web interface)  
 
 3) [FrontEnd] Telegram: Stitch above together with Telegram bot menu and methods
 
 4) [Infrastructure] LN Addresses:
-    * to add LN Address entries to website by updating git repo: github.com/bitkarrot/laisee-frontpage
-    * current website has .well-known enabled
+    * LN Address entries by updating git repo: github.com/bitkarrot/laisee-frontpage
+    * deployed site has .well-known enabled
  
-5) [FrontEnd] Web framerwork: https://laisee-test.vercel.app/
+5) [FrontEnd] Web framework: https://laisee-test.vercel.app/
     * can be easily extended in future to embed lnbits functions
-    * demo site has email magic link and simple profile setup: telegram username, email, avatar, website
-    * data on supabase
+    * supabase backend
