@@ -12,10 +12,6 @@ from laisee_utils import check_supauser_exists, create_lnaddress, delete_lnaddre
 # check transactions. (receiving, there are no websockets, cron pull?)
 
 async def main():
-    # setup application 
-    # master key for creating accounts
-    # run node update_git.cjs -p to pull down laisee-frontpage repo 
-    # git clone https://github.com/bitkarrot/laisee-frontpage.git
     
     masterc = Config(config_file="config.yml")
     lnbits_url = masterc.lnbits_url
