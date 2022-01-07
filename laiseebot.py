@@ -126,17 +126,13 @@ async def QR_Topup(wallet_config):
 
 
 async def get_laisee_img(amt: int, wallet_config: str):
-    #fee_amt = (float(amt) * fee_percent) + fee_base
-    #fee_amt = 0
-    #send_amt = float(amt) + fee_amt
-
     status = await check_balance(wallet_config, amt)
     if status is True: 
         async with ClientSession() as session:
             lw = LnurlWithdraw(wallet_config, session)
             # creates link, doesn't check balance
             # must be of integer type
-            title = f'Laisee amount: {int(amt)}'
+            title = f'Lightning Laisee: {int(amt)}'
             body = {"title": title, 
                 "min_withdrawable": int(amt),
                 "max_withdrawable": int(amt), 
@@ -475,7 +471,7 @@ async def handler(event):
 
 
     if ('/laisee' in input):
-        await client.send_message(event.sender_id, f'Okay, give a moment to process this....')
+        await client.send_message(event.sender_id, f'Okay, give me a moment to process this....')
         try:
             # create image w/lnurlw
             params = input.split(' ')
