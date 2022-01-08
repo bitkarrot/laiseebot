@@ -422,9 +422,13 @@ async def handler(event):
     if menu['balance'] == input:
         if wallet_config is not None:
             async with ClientSession() as session:
-                balance = await get_balance(session, wallet_config)
-                msg = f'Your Wallet Balance: {str(balance)} sats'
+                # balance = await get_balance(session, wallet_config)
+                # msg = f'Your Wallet Balance: {str(balance)} sats'
+                msg, entries = await client_balance(wallet_config)
                 await client.send_message(event.sender_id, msg)
+                entry_msg = 'To see created laisee: `/entries`'
+                await client.send_message(event.sender_id, entry_msg)
+
 
 
     ##### Help , Tools ############
@@ -453,9 +457,14 @@ async def handler(event):
     if ('/balance' in input):
         if wallet_config is not None:
             async with ClientSession() as session:
-                balance = await get_balance(session, wallet_config)
-                msg = f'Your Wallet Balance: {str(balance)} sats'
+                #balance = await get_balance(session, wallet_config)
+                #msg = f'Your Wallet Balance: {str(balance)} sats'
+                #await client.send_message(event.sender_id, msg)
+                msg, entries = await client_balance(wallet_config)
                 await client.send_message(event.sender_id, msg)
+                entry_msg = 'To see created laisee: `/entries`'
+                await client.send_message(event.sender_id, entry_msg)
+
 
 
     if ('/details' in input):
