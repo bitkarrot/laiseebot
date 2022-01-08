@@ -191,8 +191,13 @@ async def get_created_laisee(session, wallet_config):
                 wamt = item['max_withdrawable']
                 total_laisee_amt += wamt
                 wlink = wallet_config.lnbits_url + "/withdraw/" + item['id']
-                wdate = time.ctime(item['open_time'])
-                entry = "<a href=\"" + wlink + "\">" + wtitle + "</a> created: " + wdate
+                wdate = dt.date.fromtimestamp(item['open_time'])
+                # expires in 3 months from wdate
+                from datetime import timedelta
+                delta = timedelta(days=90)
+                expiry = wdate + delta
+                expiry_date = expiry.strftime("%A %d. %B %Y")
+                entry = "<a href=\"" + wlink + "\">" + wtitle + "</a> expires: " + expiry_date
                 entries.append(entry)
         return entries, total_laisee_amt
     else:
