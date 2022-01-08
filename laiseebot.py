@@ -530,6 +530,16 @@ async def handler(event):
                 await event.reply(msg)
 
 
+    if ('/swapin' in input):
+        msg = '<b>An alternative way to top up your lightning wallet:</b>\n\n'
+        msg += '1. Decide how many sats you want, make an invoice: \n For example, type into the msg box: <b>/invoice 100000</b>,\n\n'
+        msg += '2. Copy lightning invoice \n\n'
+        msg += '3. Visit https://fixedfloat.com/BTC/BTCLN?ref=vxhys31b, \n\n'
+        msg += 'Paste lightning invoice in the box, and exchange with your coin of choice.\n\n'
+        msg += '4. Click on /balance to make sure lightning sats received. That\'s it. \n\n\n'
+        msg += 'Check Tools Menu for sat conversion rates'
+        await event.reply(msg)
+
 
     if ('/send' in input):
         # TODO: factor out into separate method
