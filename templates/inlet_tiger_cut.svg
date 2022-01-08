@@ -64,15 +64,11 @@
        y="458.13913"
        id="text4205"><tspan
          sodipodi:role="line"
-         x="133.79272"
-         y="458.13913"
-         style="font-size:5.08001px;fill:#5b1110;fill-opacity:1;stroke-width:0.634999"
-         id="tspan4207">id #{{idnumber}}</tspan><tspan
-         sodipodi:role="line"
-         x="133.79272"
-         y="464.48914"
-         style="font-size:5.08001px;fill:#5b1110;fill-opacity:1;stroke-width:0.634999"
-         id="tspan4281">expires {{expires}}</tspan></text>
+         x="110.79272"
+         y="464.13913"
+         style="font-size:6.58001px;fill:#5b1110;fill-opacity:1;stroke-width:0.634999"
+         id="tspan4207">ID# {{idnumber}}</tspan>
+         </text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:7.05556px;line-height:1.25;font-family:sans-serif;white-space:pre;inline-size:39.6557;fill:#5b1110;fill-opacity:1;stroke:none;stroke-width:0.264583"
