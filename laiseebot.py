@@ -435,8 +435,8 @@ async def handler(event):
         await client.send_message(event.sender_id, msg)
         content = '<b>- How to Make Laisee</b>\n\n' + helpinfo['make'] + "\n\n"
         content += '<b>- Redeem Laisee</b>\n\n' + helpinfo['redeem'] + "\n\n"
-        content += '<b>- Lightning Wallets</b>\n\n See https://laisee.org/wallets for more information \n\n'
-        content += '<b>- Helpdesk:</b>\n\n Visit us at https://t.me/laiseehelpdesk\n\n'
+        content += '<b>- Lightning Wallets</b>\n\n See https://laisee.org/posts/wallets for more information \n\n'
+        content += '<b>- Helpdesk:</b>\n\n Visit us at https://t.me/laiseehelpdesk or https://laisee.org/posts/helpdesk\n\n'
 
         await client.send_message(event.sender_id, content)
 
@@ -514,7 +514,7 @@ async def handler(event):
                     amt = int(params[1])
                     async with ClientSession() as session:
                         uw = UserWallet(config=wallet_config, session=session)
-                        bolt11json = await uw.create_invoice(direction=False, amt=amt, memo="laisee invoice", webhook="https://laisee.org")
+                        bolt11json = await uw.create_invoice(direction=False, amt=amt, memo="laisee invoice", webhook="https://hooks.laisee.org/invoice")
                         inv_content = json.dumps(bolt11json)
                         print(inv_content)
 
@@ -582,7 +582,7 @@ async def handler(event):
                     recvwallet = await recv_wallet.get_wallet_details()
                     print(f"recvr wallet info : {recvwallet}")
 
-                    bolt11 = await recv_wallet.create_invoice(direction=False, amt=int(amt), memo="laisee", webhook="https://laisee.org")
+                    bolt11 = await recv_wallet.create_invoice(direction=False, amt=int(amt), memo="laisee", webhook="https://hooks.laisee.org/invoice")
                     send_wallet = UserWallet(config=wallet_config, session=session)
 
                     # CHECK FOR INSUFFICIENT BALANCE ERRORS
