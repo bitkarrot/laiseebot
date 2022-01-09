@@ -183,7 +183,8 @@ async def get_created_laisee(session, wallet_config):
     if wallet_config is not None:
         lw = LnurlWithdraw(wallet_config, session)
         links = await lw.list_withdrawlinks()
-        total_laisee_amt = 0 
+        total_laisee_amt = 0
+        total_redeemed = 0
         entries = []
         for item in links: 
             if 'Laisee' in item['title']: 
@@ -197,28 +198,40 @@ async def get_created_laisee(session, wallet_config):
                 delta = timedelta(days=90)
                 expiry = wdate + delta
                 expiry_date = expiry.strftime("%A %d. %B %Y")
-                entry = "<a href=\"" + wlink + "\">" + wtitle + "</a> expires: " + expiry_date
+                used = item['used']
+                id = item['id']
+                redeemed = "No"
+                if used == 1:
+                    redeemed = "Yes"
+                    total_redeemed += wamt
+                entry = "<b><a href=\"" + wlink + "\">" + wtitle + "</a></b>\n<b>ID:</b> " + id + "\n<b>Expiry:</b> " + expiry_date + "\n<b>Redeemed:</b> " + redeemed + "\n\n"
                 entries.append(entry)
-        return entries, total_laisee_amt
+                active_total = total_laisee_amt - total_redeemed
+        return entries, active_total, total_redeemed
     else:
         return None, None
 
 
 async def client_balance(wallet_config):
     async with ClientSession() as session:
-        entries, total_laisee_amt = await get_created_laisee(session, wallet_config)
+        lw = LnurlWithdraw(wallet_config, session)
+        links = await lw.list_withdrawlinks()
         balance = await get_balance(session, wallet_config)
-        avail_balance  = balance  - total_laisee_amt
+        unspent_laisee_amt = 0
+        for item in links:
+           if item['used'] == 0:
+               unspent_laisee_amt += item['max_withdrawable']
+        avail_balance  = balance  - unspent_laisee_amt
 
     msg = "Current Balance in Wallet: " + str(balance) + "\n"
-    msg += "Total Amount Allocated to Laisee: " + str(total_laisee_amt) + "\n"
+    msg += "Portion of Current Balance allocated to Laisee: " + str(unspent_laisee_amt) + "\n"
     msg += "<b>Available Balance for New Laisee: " + str(avail_balance) + "</b>\n\n"
-    return msg, entries
+    return msg, links
 
 
 async def check_balance(wallet_config, alloc_amt): 
     async with ClientSession() as session:
-        entries, total_laisee_amt = await get_created_laisee(session, wallet_config)
+        entries, total_laisee_amt, redeemed = await get_created_laisee(session, wallet_config)
         balance = await get_balance(session, wallet_config)
         avail_balance  = balance  - total_laisee_amt
         if alloc_amt > avail_balance + 1: 
@@ -358,7 +371,6 @@ async def callback(event):
     logger.info('Callback method called')
 
 
-
 @events.register(events.NewMessage(incoming=True, outgoing=False))
 async def handler(event):
     input = str(event.raw_text)
@@ -471,13 +483,32 @@ async def handler(event):
 
     if ('/entries' in input):
         async with ClientSession() as session:
-            entries, total_laisee_amt = await get_created_laisee(session, wallet_config)
+            entries, total_laisee_amt, redeemed = await get_created_laisee(session, wallet_config)
             for i in entries:
                 await client.send_message(event.sender_id, i)
-            totals = "Total Laisee Created:  " + str(len(entries))
+            totals = "Total Laisee Created:  " + str(len(entries)) + "\n"
+            totals += "Total Sats in Outstanding Laisee: " + str(total_laisee_amt) + "\n"
+            totals += "Total Sats Redeemed: " + str(redeemed) + "\n"
             await client.send_message(event.sender_id, totals)
                 
 
+    if ('/cancel' in input):
+        try:
+            params = input.split(' ')
+            if len(params) == 2:
+                id = params[1]
+                async with ClientSession() as session:
+                    msg = "Cancel Laisee: "  +  id
+                    await client.send_message(event.sender_id, msg)
+            else:
+                msg = "Usage: /cancel < laisee id number > "
+                await client.send_message(event.sender_id, msg)
+
+        except Exception as e:
+            msg = "Error cancelling laisee: " + str(e)
+            await event.reply(msg)
+
+        
 
     if ('/laisee' in input):
         await client.send_message(event.sender_id, f'Okay, give me a moment to process this....')
