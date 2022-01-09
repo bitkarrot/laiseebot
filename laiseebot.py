@@ -185,6 +185,7 @@ async def get_created_laisee(session, wallet_config):
         links = await lw.list_withdrawlinks()
         total_laisee_amt = 0
         total_redeemed = 0
+        active_total =0 
         entries = []
         for item in links: 
             if 'Laisee' in item['title']: 
@@ -209,7 +210,7 @@ async def get_created_laisee(session, wallet_config):
                 active_total = total_laisee_amt - total_redeemed
         return entries, active_total, total_redeemed
     else:
-        return None, None
+        return None, None, None
 
 
 async def client_balance(wallet_config):
@@ -497,9 +498,22 @@ async def handler(event):
             params = input.split(' ')
             if len(params) == 2:
                 id = params[1]
+                print(id)
                 async with ClientSession() as session:
-                    msg = "Cancel Laisee: "  +  id
-                    await client.send_message(event.sender_id, msg)
+                    lw = LnurlWithdraw(wallet_config, session)
+                    data = await lw.get_withdrawlink(id)
+                    print(data)
+                    if len(data) == 1: # link does not exist
+                        msg = data['message']
+                        await client.send_message(event.sender_id, msg)
+                    elif data['used'] == 0: # has not been used, try to delete
+                        status = await lw.delete_withdrawlink(id)
+                        msg = "Cancelled Laisee: "  +  id + "\n"
+                        msg += str(status)
+                        await client.send_message(event.sender_id, msg)
+                    elif data['used'] == 1: # has been used, don't delete
+                        msg = "cannot cancel, already redeemed ID: "  +  id + "\n"
+                        await client.send_message(event.sender_id, msg)
             else:
                 msg = "Usage: /cancel < laisee id number > "
                 await client.send_message(event.sender_id, msg)
