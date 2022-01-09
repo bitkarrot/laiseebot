@@ -45,7 +45,7 @@ Telegram Bot for LN Laisees
     * Data: 
       - TG Username
       - LN Address (username@domain.com)
-      - LNBits url (e.g. https://bits.bitcoin.org.hk/lnurlp/?usr=XXXXXXX)
+      - LNBits url
       - invoice_key (lnbits, needed for send/receive/lookup functions)
       - admin_key (lnbits, needed to enable extensions and create lnurlp, used with LN Addresses) 
       - Email Address (tied to auth on supabase, accessible via web interface)
