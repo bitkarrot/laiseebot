@@ -353,7 +353,7 @@ async def callback(event):
         await event.reply(msg)
 
     if query_name == 'More Lightning Address Info': 
-        msg = "\nTo check if the address is active: https://sendsats.to/qr/" + telegram_name + "@laisee.org\n\n"
+        msg = "\n\nTo check if the address is active: https://sendsats.to/qr/" + telegram_name + "@laisee.org\n\n"
         msg = ' '.join(get_lnaddress_info('en')) + msg
         await event.reply(msg)
 
