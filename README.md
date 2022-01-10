@@ -1,6 +1,16 @@
 # laiseebot
 Telegram Bot for LN Laisees
 
+You must have rsvg-convert installed 
+
+```
+sudo apt install librsvg2-bin
+sudo apt-get rsvg-convert
+```
+
+Requires at least python3.8
+
+
 # commands list
 - **/help** - get help commands, and a welcome message on how to use the bot
 - **/start** - automatically creates a wallet on LNBITS with LNURLp extension. 
