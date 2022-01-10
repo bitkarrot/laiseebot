@@ -294,7 +294,7 @@ async def callback(event):
     ### settings ###
     
     if query_name == 'Delete Wallet':
-        msg = "OK, please give me a moment ....."
+        msg = "OK, please give me a moment to delete ....."
         await event.edit(msg)
 
         if wallet_config is not None:
@@ -472,6 +472,25 @@ async def handler(event):
                 await client.send_message(event.sender_id, msg)
                 entry_msg = 'To see created laisee: `/entries`'
                 await client.send_message(event.sender_id, entry_msg)
+
+    if ('/deletewallet' in input):
+        msg = "ok working on deleting wallet...."
+        await client.send_message(event.sender_id, msg)
+        if wallet_config is not None:
+            userlink = await wallet_config.get_lnbits_link()
+            print(f'in Delete wallet, getting wallet config, lnbits link: {userlink}')
+            result = await bot_delete_user(wallet_config)
+            msg = f'Result of deleting user: {result}'
+            await client.send_message(event.sender_id, msg)
+
+            delete_msg = "OK, Deleted everything! Sorry to see you go. If you want to recreate your wallet anytime just type /start"
+            await client.send_message(event.sender_id, delete_msg, buttons=[Button.text('Bye!', resize=True, single_use=True)])
+            async with ClientSession() as session:
+                status = await delete_lnaddress(session, wallet_config)
+                print(f'Delete LN Address Status { status }')
+        else: 
+            delete_msg = "Having trouble deleting your wallet, please contact an admin via helpdesk"
+            await client.send_message(event.sender_id, delete_msg)
 
 
 
