@@ -551,6 +551,10 @@ async def handler(event):
             if len(params) == 2:
                 print(params[1])
                 amt = int(params[1])
+                balance = get_balance(session, wallet_config)
+                if amt < balance: 
+                    await client.send_message(event.sender_id, "Insufficient Balance available to create new laisee.")
+                    return
                 output_png, withdraw_id = await get_laisee_img(amt, wallet_config)
                 if output_png is None:
                     await client.send_message(event.sender_id, "Insufficient Balance available to create new laisee.")
@@ -653,9 +657,9 @@ async def handler(event):
                     # {"id": <string>, "name": <string>, "balance": <int>}
                     sendinfo = await send_wallet.get_wallet_details()
                     balance = float(sendinfo['balance'])/1000                
-                    fee_amt = 1 # int(amt * fee_percent) + fee_base
-                    if balance-fee_amt < amt:
-                        await client.send_message(event.sender_id, f'insufficient balance to send: {balance}, fee amount: {fee_amt}')
+                    #fee_amt = 1 # int(amt * fee_percent) + fee_base
+                    if balance < amt + 1:
+                        await client.send_message(event.sender_id, f'insufficient balance to send: {balance}')
                         return
                     
                     # send pay invoice
