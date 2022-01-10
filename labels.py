@@ -40,11 +40,10 @@ en_send_created = "Okay, I’m going to create a Laisee over < amount > satoshi.
 en_laisee_created =  "Congrats, here is your Laisee! You can forward this to anyone you like, save it to your device, attach it to an email or print it out. If you need, you can generate a short explanation of what a Lightning Laisee is, and how it can be redeemed, by clicking on the link below.\n\nRemember to keep enough funds in your wallet!"
 
 
-en_help = {	'make' : "To make a Laisee, click on the button 'Create Laisee' in your chat with the Laisee Bot. You can select one of the suggested amounts, or specify your own amount with the command /laisee <amount > You can also send laisee directly to another telegram user by the 'Send Laisee via Telegram' button\n\nTo create a Laisee, you will need to have Bitcoin in the Lightning Network. Find out more at https://laisee.org/posts/send",
-    		'wallets' : "Lightning wallets can be categorized into custodial and non-custodial wallets. With custodial wallets, you trust the operator of the wallet with your funds, but often pay no or a smaller set-up fee. If you are downloading a Lightning wallet purely to play with your Laisee, you might find a custodial wallet most suitable. If you are serious about storing funds in bitcoin, we recommend a non-custodial wallet.\n\nNon-custodial wallets:\n\nBreez (Google Play, Testflight for iOS)\nMuun (Google Play, iOS)\nPhoenix (Google Play, iOS)\nSimple Bitcoin Wallet (Google Play, F-Droid)\n\nCustodial wallets\nBluewallet (Google Play, iOS)\nLNTXBOT (Telegram)\nWallet of Satoshi (Google Play, iOS)",
-		    'redeem' : "A Lightning Laisee is a digital envelope containing bitcoin on the Lightning Network. Each Laisee can only be redeemed once. To redeem a Laisee, you will need a Lightning wallet. Find out more at: https://laisee.org/posts/redeem" }            
-     #        You can download a Lightning wallet for all major platforms.\n\nScan the QR code with your wallet and follow the instructions on screen. Some wallets will charge you a fee for the first transaction you receive. Wallets that do not charge such a fee are typically custodial wallets, meaning you trust the operator of the wallet with your funds.\n\nIf you are downloading a Lightning wallet purely to play with your Laisee, you might find a custodial wallet most suitable. If you are serious about storing funds in bitcoin, we recommend a non-custodial wallet."}
-		
+en_help = {	'make' : 'See https://laisee.org/posts/send',
+    		'wallets' : 'See https://laisee.org/posts/wallets',
+		    'redeem' : 'See https://laisee.org/posts/redeem'
+            }		
 		
 # Top Menu Buttons
 def get_topmenu(lang):

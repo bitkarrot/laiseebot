@@ -446,10 +446,10 @@ async def handler(event):
     if menu['help'] == input:
         msg = info['help']
         await client.send_message(event.sender_id, msg)
-        content = '<b>- How to Make Laisee</b>\n\n' + helpinfo['make'] + "\n\n"
-        content += '<b>- Redeem Laisee</b>\n\n' + helpinfo['redeem'] + "\n\n"
-        content += '<b>- Lightning Wallets</b>\n\n See https://laisee.org/posts/wallets for more information \n\n'
-        content += '<b>- Helpdesk:</b>\n\n Visit us at https://t.me/laiseehelpdesk or https://laisee.org/posts/helpdesk\n\n'
+        content = '<b>- How to Make Laisee</b>\n' + helpinfo['make'] + "\n\n"
+        content += '<b>- Redeem Laisee</b>\n' + helpinfo['redeem'] + "\n\n"
+        content += '<b>- Lightning Wallets</b>\n See https://laisee.org/posts/wallets\n\n'
+        content += '<b>- Helpdesk:</b>\n\n Visit us on Telegram at: https://t.me/laiseehelpdesk or \nhttps://laisee.org/posts/helpdesk\n\n'
 
         await client.send_message(event.sender_id, content)
 
