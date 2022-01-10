@@ -5,7 +5,7 @@ You must have rsvg-convert installed
 
 ```
 sudo apt install librsvg2-bin
-sudo apt-get rsvg-convert
+sudo apt-get install rsvg-convert
 ```
 
 Requires at least python3.8
