@@ -5,5 +5,5 @@ pylnbits==0.0.3
 pyqrcode==1.2.1
 pypng==0.0.21
 Jinja2==2.11.3
-Pillow==8.4.0
+Pillow==9.0.0
 git+git://github.com/bitkarrot/supabase-py.git@develop#egg=supabase
