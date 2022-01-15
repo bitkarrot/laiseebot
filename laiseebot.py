@@ -336,6 +336,7 @@ async def callback(event):
             await event.reply(msg)
             pngfile = convertSVG(svgimg, withdraw_id)
             await client.send_file(event.sender_id, pngfile)
+            await client.send_message(event.sender_id, 'If you need to cancel this link, please contact https://t.me/laiseehelpdesk')
             # convert SVG to PNG for telegram delivery
         else: 
             async with ClientSession() as session:
