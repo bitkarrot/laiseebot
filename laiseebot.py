@@ -515,7 +515,6 @@ async def handler(event):
             totals += "Total Sats in Outstanding Laisee: " + str(total_laisee_amt) + "\n"
             totals += "Total Sats Redeemed: " + str(redeemed) + "\n"
             await client.send_message(event.sender_id, totals)
-            await client.send_message(event.sender_id, "/cancel to cancel a non-redeemed laisee")
                 
 
     if ('/cancel' in input):
@@ -523,11 +522,10 @@ async def handler(event):
             params = input.split(' ')
             if len(params) == 2:
                 id = params[1]
-                print(id)
+                print(f'ID: {id}')
                 async with ClientSession() as session:
                     lw = LnurlWithdraw(wallet_config, session)
                     data = await lw.get_withdrawlink(id)
-                    print(data)
                     if len(data) == 1: # link does not exist
                         msg = data['message']
                         await client.send_message(event.sender_id, msg)
