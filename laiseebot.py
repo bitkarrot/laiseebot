@@ -382,21 +382,12 @@ async def handler(event):
     wallet_config = await bot_get_user(username)
 
     if menu['topup'] == input:
-        link = await QR_Topup(wallet_config)
-        msg = "There are 3 ways to top up your wallet:\n\n"
+        # link = await QR_Topup(wallet_config)
+        msg = "There are 2 ways to top up your wallet:\n\n"
         msg += "1. Create a custom invoice amount via the /invoice command\n\n"
-        msg += "2. Use a LNURL QR Code (see below)\n\n"
-        msg += "3. A Lightning Address (see below)\n\n"
+        msg += "2. A Lightning Address (see below)\n\n"
         msg += "=======================\n\n"
-        msg += "Here is the Top Up QR Code and LNURL.\n\n"
-        msg = msg +  f"<b>Min Deposit:</b> {link['min']} sats\n<b>Max Deposit:</b> {link['max']} sats\n" 
-        lnurl = link['lnurl']
-        qrimg = get_QRimg(username, lnurl)
-        if type(qrimg) == str: 
-            msg = msg +  "\n" + "<b>Scan me to deposit!</b>"
-            await client.send_message(event.sender_id, msg)
-            await client.send_file(event.chat_id, file=qrimg)
-        await client.send_message(event.chat_id, lnurl)
+        await client.send_message(event.chat_id, msg)
         msg = "\n\nYour Lightning Address is <b> " + username + "@laisee.org</b> and is <b>Case Sensitive</b>. \n\n"
         msg = msg  + "If you just created your wallet, please wait a few minutes for the address to deploy\n"
         ln_info = "More Lightning Address Info"
@@ -510,6 +501,7 @@ async def handler(event):
             totals += "Total Sats in Outstanding Laisee: " + str(total_laisee_amt) + "\n"
             totals += "Total Sats Redeemed: " + str(redeemed) + "\n"
             await client.send_message(event.sender_id, totals)
+            await client.send_message(event.sender_id, "/cancel to cancel a non-redeemed laisee")
                 
 
     if ('/cancel' in input):
@@ -551,18 +543,19 @@ async def handler(event):
             if len(params) == 2:
                 print(params[1])
                 amt = int(params[1])
-                balance = get_balance(session, wallet_config)
-                if amt < balance: 
-                    await client.send_message(event.sender_id, "Insufficient Balance available to create new laisee.")
-                    return
-                output_png, withdraw_id = await get_laisee_img(amt, wallet_config)
-                if output_png is None:
-                    await client.send_message(event.sender_id, "Insufficient Balance available to create new laisee.")
-                    return
-                await client.send_file(event.sender_id, output_png)
-                await client.send_message(event.sender_id, en_laisee_created)
-                withdraw_link =  masterc.lnbits_url + "/withdraw/" + withdraw_id
-                await client.send_message(event.sender_id, "Backup link in case above image does not scan: " + withdraw_link)
+                async with ClientSession() as session:
+                    balance = await get_balance(session, wallet_config)
+                    if amt > balance: 
+                        await client.send_message(event.sender_id, "Insufficient Balance available to create new laisee.")
+                        return
+                    output_png, withdraw_id = await get_laisee_img(amt, wallet_config)
+                    if output_png is None:
+                        await client.send_message(event.sender_id, "Insufficient Balance available to create new laisee.")
+                        return
+                    await client.send_file(event.sender_id, output_png)
+                    await client.send_message(event.sender_id, en_laisee_created)
+                    withdraw_link =  masterc.lnbits_url + "/withdraw/" + withdraw_id
+                    await client.send_message(event.sender_id, "Backup link in case above image does not scan: " + withdraw_link)
 
             else: 
                 msg = "Looks like there isn't an amount or sufficient balance to send\n"
