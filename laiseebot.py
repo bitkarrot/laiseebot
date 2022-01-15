@@ -64,8 +64,6 @@ passkey: str = config['PASSKEY'] # temporary fix for supabase for now
 
 
 supabase: Client = create_client(supa_url, supa_key)
-fee_base = 0
-fee_percent = 0
 template_file = 'templates/inlet_tiger_cut.svg'
 
 
@@ -160,15 +158,26 @@ async def get_balance(session, wallet_config) -> float:
 
 
 async def defund_wallet(wallet_config):
-    # creates a lnurlw link + QR, if balance > 1
+    # check if defund link has been created already
+    async with ClientSession() as session:
+        lw = LnurlWithdraw(wallet_config, session)
+        links = await lw.list_withdrawlinks()
+        for i in links:
+           if i['title'] == "WithdrawLink":
+               withdraw_id = i['id']
+               withdraw = LnurlWithdraw(wallet_config, session)
+               svgimg = await withdraw.get_image_embed(withdraw_id)
+               return withdraw_id, svgimg
+
+    # if no prior link then create a link now
     async with ClientSession() as session:
         user_wallet = UserWallet(config=wallet_config, session=session)
         walletinfo = await user_wallet.get_wallet_details()
         balance = float(walletinfo['balance'])/1000
-        fee_min = -1
-        if balance > fee_min: # assume min for fees is 1
+        fees_min = 1
+        if balance > fees_min: # assume min for fees is 1
             body = {"title": "WithdrawLink", "min_withdrawable": 1, 
-            "max_withdrawable": int(balance-fee_min), "uses": 1,
+            "max_withdrawable": int(balance-fees_min), "uses": 1,
             "wait_time":1, "is_unique": True}
             withdraw = LnurlWithdraw(wallet_config, session)
             res = await withdraw.create_withdrawlink(body)
@@ -224,9 +233,14 @@ async def client_balance(wallet_config):
                unspent_laisee_amt += item['max_withdrawable']
         avail_balance  = balance  - unspent_laisee_amt
 
+    if balance != 0:
+        fees = 1
+    else:
+        fees = 0
     msg = "Current Balance in Wallet: " + str(balance) + "\n"
     msg += "Portion of Current Balance allocated to Laisee: " + str(unspent_laisee_amt) + "\n"
-    msg += "<b>Available Balance for New Laisee: " + str(avail_balance) + "</b>\n\n"
+    msg += "<b>Available Balance for New Laisee: " + str(avail_balance-fees) + "</b>\n"
+    msg += "Amt reserved for Fees: " + str(fees) + "\n"
     return msg, links
 
 
@@ -235,11 +249,11 @@ async def check_balance(wallet_config, alloc_amt):
         entries, total_laisee_amt, redeemed = await get_created_laisee(session, wallet_config)
         balance = await get_balance(session, wallet_config)
         avail_balance  = balance  - total_laisee_amt
-        if alloc_amt > avail_balance + 1: 
+        fees = 1
+        if alloc_amt > avail_balance - fees: # fee
             return False
         else: 
             return True 
-
 
 
 @client.on(events.NewMessage(pattern='(?i)/start', forwards=False, outgoing=False))
@@ -341,7 +355,6 @@ async def callback(event):
         if output_png is None:
             await client.send_message(event.sender_id, "Insufficient Balance available to create new laisee.")
             return
-        # total = int(amt) + fee_amt
         await client.send_file(event.sender_id, output_png)
         await client.send_message(event.sender_id, en_laisee_created)
         withdraw_link =  masterc.lnbits_url + "/withdraw/" + withdraw_id
@@ -545,7 +558,8 @@ async def handler(event):
                 amt = int(params[1])
                 async with ClientSession() as session:
                     balance = await get_balance(session, wallet_config)
-                    if amt > balance: 
+                    fees = 1
+                    if amt + fees > balance:  # add 1 sat fee
                         await client.send_message(event.sender_id, "Insufficient Balance available to create new laisee.")
                         return
                     output_png, withdraw_id = await get_laisee_img(amt, wallet_config)
@@ -649,8 +663,7 @@ async def handler(event):
                     # CHECK FOR INSUFFICIENT BALANCE ERRORS
                     # {"id": <string>, "name": <string>, "balance": <int>}
                     sendinfo = await send_wallet.get_wallet_details()
-                    balance = float(sendinfo['balance'])/1000                
-                    #fee_amt = 1 # int(amt * fee_percent) + fee_base
+                    balance = float(sendinfo['balance'])/1000
                     if balance < amt + 1:
                         await client.send_message(event.sender_id, f'insufficient balance to send: {balance}')
                         return
