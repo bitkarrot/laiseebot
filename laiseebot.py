@@ -526,6 +526,7 @@ async def handler(event):
                 async with ClientSession() as session:
                     lw = LnurlWithdraw(wallet_config, session)
                     data = await lw.get_withdrawlink(id)
+                    print(data)
                     if len(data) == 1: # link does not exist
                         msg = data['message']
                         await client.send_message(event.sender_id, msg)
