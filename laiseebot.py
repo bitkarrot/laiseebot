@@ -671,11 +671,12 @@ async def handler(event):
                     # send pay invoice
                     payhash = await send_wallet.pay_invoice(direction=True, bolt11=bolt11['payment_request'])
                     # print(f'>>>>> payhash : {payhash}')
-                    payment_hash = "/"+payhash['payment_hash']   # TODO Fix missing "/" bug in pylnbits 
+                    payment_hash = payhash['payment_hash']  
+                    # payment_hash = "/"+payhash['payment_hash']   # TODO Fix missing "/" bug in pylnbits 
                     #print(f'paymenthash: {payment_hash} ')
                     inv_check = await send_wallet.check_invoice(payment_hash)
                     inv_content = json.dumps(inv_check)
-                    print(f'inv check: {inv_content}')
+                    #print(f'inv check: {inv_content}')
                     
                     # notify sender and recipient
                     if inv_check['paid']:
@@ -692,7 +693,7 @@ async def handler(event):
 
             except Exception as e: 
                 logger.info("in /send: " + str(e))
-                # await client.send_message(event.sender_id, str(e))
+                await client.send_message(event.sender_id, str(e))
                 if 'message' in bolt11: # error can't get bolt11
                     await client.send_message(event.sender_id, bolt11['message'])
                     print(f'bolt11: {bolt11}')
