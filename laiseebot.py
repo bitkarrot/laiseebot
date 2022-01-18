@@ -531,8 +531,10 @@ async def handler(event):
                     print(data)
                     print(type(data))
                     if len(data) == 1: # link does not exist
-                        msg = data['message']
+                        msg = data['detail'] # Jan lnbits
+                        # msg = data['message'] # nov lnbits
                         await client.send_message(event.sender_id, msg)
+                        
                     elif data['used'] == 0: # has not been used, try to delete
                         status = await lw.delete_withdrawlink(id)
                         msg = "Cancelled Laisee: "  +  id + "\n"
