@@ -528,8 +528,8 @@ async def handler(event):
                     import ast
                     d = await lw.get_withdrawlink(id)
                     data = ast.literal_eval(d)
-                    #print(data)
-                    #print(type(data))
+                    print(data)
+                    print(type(data))
                     if len(data) == 1: # link does not exist
                         msg = data['message']
                         await client.send_message(event.sender_id, msg)
