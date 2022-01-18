@@ -525,7 +525,7 @@ async def handler(event):
                 print(f'ID: {id}')
                 async with ClientSession() as session:
                     lw = LnurlWithdraw(wallet_config, session)
-                    import ast
+                    import ast # for ubuntu
                     d = await lw.get_withdrawlink(id)
                     data = ast.literal_eval(d)
                     print(data)
@@ -548,7 +548,8 @@ async def handler(event):
                 await client.send_message(event.sender_id, msg)
 
         except Exception as e:
-            msg = "Error cancelling laisee: " + str(e)
+            msg = "Error cancelling laisee: " + str(e) + "\n"
+            msg += "If you are experiencing problems, visit the helpdesk"
             await event.reply(msg)
 
         
