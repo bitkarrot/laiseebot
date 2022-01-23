@@ -576,6 +576,8 @@ async def handler(event):
                     await client.send_message(event.sender_id, en_laisee_created)
                     withdraw_link =  masterc.lnbits_url + "/withdraw/" + withdraw_id
                     await client.send_message(event.sender_id, "Backup link in case above image does not scan: " + withdraw_link)
+                    entry_msg = 'To see all created laisees: `/entries`'
+                    await client.send_message(event.sender_id, entry_msg)
 
             else: 
                 msg = "Looks like there isn't an amount or sufficient balance to send\n"
