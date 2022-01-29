@@ -149,8 +149,7 @@ async def create_supauser(supabase: Client, lnbits_data: dict, uuid: str):
                 'admin_key': wallet_data['adminkey'],
                 'invoice_key': wallet_data['inkey'],
                 'wallet_id': wallet_data['id'],
-                'lnaddress': lnbits_data['name'] + "@" + domain,
-#                'lnaddress': lnbits_data['name'] + "@laisee.org", # must be unique
+                'lnaddress': str(lnbits_data['name']).lower() + domain, # must be unique
                 'website': '', 
                 'avatar_url': '', 
                 'updated_at': now}
@@ -169,7 +168,8 @@ async def get_supauser_data(supabase: Client, username: str):
 async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
     try:
         # first check to see if the address exists or not
-        telegram_name = wallet_config.telegram
+        # force all lower case due to spec. 
+        telegram_name = str(wallet_config.telegram).lower()
         # simple check: look at github repo for telegram named file in folder  
         # doesn't guarantee validity, if not deleted from previous account creation 
         # assume git repo in 1 level up
@@ -234,7 +234,7 @@ async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
 async def delete_lnaddress(session: ClientSession, wallet_config: LConfig):
     try:
         # get pay id from github entry
-        telegram_name = wallet_config.telegram
+        telegram_name = str(wallet_config.telegram).lower()
         new_path = git_repo_path + telegram_name
         print(f'Lightning Address File to delete : {new_path}')
 
@@ -269,8 +269,7 @@ async def create_laisee_user(telegram_name: str, config, session: ClientSession,
     lnbits_url = config.lnbits_url
     adminkey = config.admin_key
 
-    laisee_email: str = telegram_name + "@" + domain
-#    laisee_email: str = telegram_name + "@laisee.org"
+    laisee_email: str = telegram_name.lower() + "@" + domain
     # passkey: str = os.environ.get("PASSKEY")
     random_password = passkey
     user = supabase.auth.sign_up(email=laisee_email, password=random_password, phone=None)

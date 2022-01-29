@@ -372,7 +372,7 @@ async def callback(event):
         await event.reply(msg)
 
     if query_name == 'More Lightning Address Info': 
-        msg = "\n\nTo check if the address is active: https://sendsats.to/qr/" + telegram_name + '@' + domain + "\n\n"
+        msg = "\n\nTo check if the address is active: https://sendsats.to/qr/" + telegram_name.lower() + "@laisee.org\n\n"
         msg = ' '.join(get_lnaddress_info('en')) + msg
         await event.reply(msg)
 
@@ -407,8 +407,9 @@ async def handler(event):
         msg += "2. A Lightning Address (see below)\n\n"
         msg += "=======================\n\n"
         await client.send_message(event.chat_id, msg)
-        msg = "\n\nYour Lightning Address is <b> " + username + "@" + domain + "</b> and is <b>Case Sensitive</b>. \n\n"
+        msg = "\n\nYour Lightning Address is <b> " + username.lower() + "@laisee.org</b> and is <b>Case Sensitive</b>. \n\n"
         msg = msg  + "If you just created your wallet, please wait a few minutes for the address to deploy\n"
+        msg = msg + "<b>If your address is not all lower case, please contact an admin at the helpdesk.</b>"
         ln_info = "More Lightning Address Info"
         await client.send_message(event.sender_id, msg, buttons=Button.inline(ln_info,ln_info))
  
