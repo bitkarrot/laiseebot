@@ -29,7 +29,7 @@ en_info = {'help': "Need help making, redeeming or understanding Laisee? We got 
 
 
 en_LNaddress_info = [ "A Lightning Address looks like an email address, but it can be used to send funds to your Laisee Bot account from any external wallet that supports it.\n\n This Lightning Address is set to accept between 10 and 10,000 satoshi per transaction. You can use your Lightning Address as often as you like. If your Laisee Bot account is new, you may need to wait a few minutes before your Lightning Address is active.\n\n",
-                    "Top Up Example: /send 1000 laiseebot@laisee.org \n\n", 
+                    "Top Up Example from @lntxbot: /send 1000 laiseebot@laisee.org \n\n", 
                     "This Lightning Address is currently set to accept between <b> 10 to 10,000 sats maximum in a transaction. </b>\n\n",
                     "If you just created your wallet, please wait a few minutes for the address to deploy. ",
                     "If you are having trouble accessing the Lightning address, please visit the helpdesk."]
@@ -37,7 +37,7 @@ en_LNaddress_info = [ "A Lightning Address looks like an email address, but it c
 
 
 en_send_created = "Okay, I’m going to create a Laisee over < amount > satoshi. Please hodl on a moment…"
-en_laisee_created =  "Congrats, here is your Laisee! You can forward this to anyone you like, save it to your device, attach it to an email or print it out. If you need, you can generate a short explanation of what a Lightning Laisee is, and how it can be redeemed, by clicking on the link below.\n\nRemember to keep enough funds in your wallet!"
+en_laisee_created =  "Congrats, here is your Laisee! You can forward this to anyone you like, save it to your device, attach it to an email or print it out. If you need, you can share with the recipient how the laisee can be redeemed, with this link: https://laisee.org/posts/redeem \n\nRemember to keep enough funds in your wallet!"
 
 
 en_help = {	'make' : 'See https://laisee.org/posts/send',
