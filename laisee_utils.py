@@ -149,7 +149,7 @@ async def create_supauser(supabase: Client, lnbits_data: dict, uuid: str):
                 'admin_key': wallet_data['adminkey'],
                 'invoice_key': wallet_data['inkey'],
                 'wallet_id': wallet_data['id'],
-                'lnaddress': str(lnbits_data['name']).lower() + domain, # must be unique
+                'lnaddress': str(lnbits_data['name']).lower() + "@" + domain, # must be unique
                 'website': '', 
                 'avatar_url': '', 
                 'updated_at': now}
