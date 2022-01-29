@@ -180,7 +180,6 @@ async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
             return True
         # create ln address w/laisee_email
         laisee_email = telegram_name + "@" + domain
-#        laisee_email = telegram_name + "@laisee.org"
         # create lnurlp link, add to github in file called 'telegram_name'
         lnurlp = LnurlPay(wallet_config, session)
         # create pay link
