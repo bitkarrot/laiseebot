@@ -5,6 +5,7 @@ api_hash: 3a9......
 api_id: 1....
 session_name: 'YOURBOTNAME'
 # Session name. Only one session (with a unique session name) can run at a time
+domain_name: mydomain.com
 
 LNBITS_ADMIN: 'https://yourinstanceoflnbits.com'
 

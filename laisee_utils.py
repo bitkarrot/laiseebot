@@ -18,16 +18,17 @@ from jinja2 import Template
 import subprocess
 import base64
 
-
 # test user creation with pylnbits and supabase-py
 # laisee user = supabase + lnbits accounts
 
 # here we assume git repo already cloned and in current working dir
 # rewrite subprocess commits with simplegit in node.js, 
 # python-git not suitable for long running processes
+
+from domain_name import get_domain
+
 git_repo_path = "../laisee-frontpage/public/.well-known/lnurlp/"
-
-
+domain = get_domain()
 
 def create_laisee_qrcode(lnurl: str, idnumber: str, expires: str, sats: str, template_file: str):
     '''
@@ -148,7 +149,7 @@ async def create_supauser(supabase: Client, lnbits_data: dict, uuid: str):
                 'admin_key': wallet_data['adminkey'],
                 'invoice_key': wallet_data['inkey'],
                 'wallet_id': wallet_data['id'],
-                'lnaddress': lnbits_data['name'] + "@laisee.org", # must be unique
+                'lnaddress': str(lnbits_data['name']).lower() + "@" + domain, # must be unique
                 'website': '', 
                 'avatar_url': '', 
                 'updated_at': now}
@@ -167,7 +168,8 @@ async def get_supauser_data(supabase: Client, username: str):
 async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
     try:
         # first check to see if the address exists or not
-        telegram_name = wallet_config.telegram
+        # force all lower case due to spec. 
+        telegram_name = str(wallet_config.telegram).lower()
         # simple check: look at github repo for telegram named file in folder  
         # doesn't guarantee validity, if not deleted from previous account creation 
         # assume git repo in 1 level up
@@ -177,7 +179,7 @@ async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
         if os.path.exists(git_entry):
             return True
         # create ln address w/laisee_email
-        laisee_email = telegram_name + "@laisee.org"
+        laisee_email = telegram_name + "@" + domain
         # create lnurlp link, add to github in file called 'telegram_name'
         lnurlp = LnurlPay(wallet_config, session)
         # create pay link
@@ -231,7 +233,7 @@ async def create_lnaddress(session: ClientSession, wallet_config: LConfig):
 async def delete_lnaddress(session: ClientSession, wallet_config: LConfig):
     try:
         # get pay id from github entry
-        telegram_name = wallet_config.telegram
+        telegram_name = str(wallet_config.telegram).lower()
         new_path = git_repo_path + telegram_name
         print(f'Lightning Address File to delete : {new_path}')
 
@@ -266,7 +268,7 @@ async def create_laisee_user(telegram_name: str, config, session: ClientSession,
     lnbits_url = config.lnbits_url
     adminkey = config.admin_key
 
-    laisee_email: str = telegram_name + "@laisee.org"
+    laisee_email: str = telegram_name.lower() + "@" + domain
     # passkey: str = os.environ.get("PASSKEY")
     random_password = passkey
     user = supabase.auth.sign_up(email=laisee_email, password=random_password, phone=None)

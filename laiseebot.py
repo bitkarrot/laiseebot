@@ -9,7 +9,7 @@ from pylnbits.lnurl_w import LnurlWithdraw
 
 from local_config import LConfig
 from client_methods import create_user, delete_user, get_user
-from laisee_utils import get_QRimg, create_lnaddress, delete_lnaddress, create_laisee_qrcode, convertSVG
+from laisee_utils import create_lnaddress, delete_lnaddress, create_laisee_qrcode, convertSVG
 import datetime as dt
 import json
 import time
@@ -44,6 +44,11 @@ with open(config_file, 'rb') as f:
 f.close()
 TOKEN = config['bot_token']
 logger.info(f'Bot Token: {TOKEN}')
+
+global domain
+domain = config['domain_name']
+
+
 
 client = TelegramClient(config["session_name"],
                         config["api_id"],
@@ -369,7 +374,7 @@ async def callback(event):
         await event.reply(msg)
 
     if query_name == 'More Lightning Address Info': 
-        msg = "\n\nTo check if the address is active: https://sendsats.to/qr/" + telegram_name + "@laisee.org\n\n"
+        msg = "\n\nTo check if the address is active: https://sendsats.to/qr/" + telegram_name.lower() + "@" + domain + "\n\n"
         msg = ' '.join(get_lnaddress_info('en')) + msg
         await event.reply(msg)
 
@@ -404,8 +409,9 @@ async def handler(event):
         msg += "2. A Lightning Address (see below)\n\n"
         msg += "=======================\n\n"
         await client.send_message(event.chat_id, msg)
-        msg = "\n\nYour Lightning Address is <b> " + username + "@laisee.org</b> and is <b>Case Sensitive</b>. \n\n"
+        msg = "\n\nYour Lightning Address is <b> " + username.lower() + "@laisee.org</b> and is <b>Case Sensitive</b>. \n\n"
         msg = msg  + "If you just created your wallet, please wait a few minutes for the address to deploy\n"
+        msg = msg + "<b>If your address is not all lower case, please contact an admin at the helpdesk.</b>"
         ln_info = "More Lightning Address Info"
         await client.send_message(event.sender_id, msg, buttons=Button.inline(ln_info,ln_info))
  
