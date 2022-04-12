@@ -6,6 +6,6 @@
     "fs": "^0.0.1-security",
     "js-yaml": "^4.1.0",
     "shelljs": "^0.8.5",
-    "simple-git": "^3.3.0"
+    "simple-git": "^3.5.0"
   }
 }
