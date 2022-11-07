@@ -44,13 +44,12 @@ Requires at least python3.8
 
 ========
 
-## WIP LIST
+## Infrastructure List
 
 1) [Infrastructure] pylnbits module - clean up unit tests.
     * https://github.com/lightningames/pylnbits.git
 
 2) [Infrastructure] Supabase -  
-    * Write a Module - db access for records, use curl methods as current library is incomplete
     * Data: 
       - TG Username
       - LN Address (username@domain.com)
@@ -67,6 +66,6 @@ Requires at least python3.8
     * LN Address entries by updating git repo: github.com/bitkarrot/laisee-frontpage
     * deployed site has .well-known enabled
  
-5) [FrontEnd] Web framework: https://laisee-test.vercel.app/
+5) [FrontEnd] Web framework: https://laisee.org/
     * can be easily extended in future to embed lnbits functions
     * supabase backend
