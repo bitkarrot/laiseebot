@@ -25,6 +25,7 @@ from constants import core_currency
 
 from telethon.tl.functions.users import GetFullUserRequest
 from datetime import timedelta
+import ast # for ubuntu
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logging.getLogger('telethon').setLevel(level=logging.WARNING)
@@ -534,7 +535,6 @@ async def handler(event):
                 print(f'ID: {id}')
                 async with ClientSession() as session:
                     lw = LnurlWithdraw(wallet_config, session)
-                    import ast # for ubuntu
                     d = await lw.get_withdrawlink(id)
                     data = ast.literal_eval(d)
                     print(data)
