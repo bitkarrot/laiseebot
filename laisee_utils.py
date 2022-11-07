@@ -26,6 +26,8 @@ import base64
 # python-git not suitable for long running processes
 
 from domain_name import get_domain
+from subprocess import Popen, PIPE
+
 
 git_repo_path = "../laisee-frontpage/public/.well-known/lnurlp/"
 domain = get_domain()
@@ -354,7 +356,6 @@ async def delete_laisee_user(wallet_config: LConfig, master_config: Config, supa
     # delete supbase auth 
     # supabase python library does not have auth methods yet, 
     # temporarily use the js library
-    from subprocess import Popen, PIPE
     sensor = Popen(['node', 'delete_supauser.js', uuid], stdout=PIPE)
     out = sensor.stdout.read() 
     res = out.decode('utf-8').rstrip()
