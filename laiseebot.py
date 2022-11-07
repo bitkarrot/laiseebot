@@ -23,6 +23,9 @@ from coingecko_ticker import get_btcrates, sats_convert
 from tg_utils import get_buttons, split
 from constants import core_currency
 
+from telethon.tl.functions.users import GetFullUserRequest
+from datetime import timedelta
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logging.getLogger('telethon').setLevel(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -92,7 +95,6 @@ async def bot_delete_user(wallet_config):
 
 async def check_user_exists(username):
     # check if username exists in telegram
-    from telethon.tl.functions.users import GetFullUserRequest
     try: 
         full = await client(GetFullUserRequest(username))
         print('telegram user check, should return same username')
@@ -209,7 +211,6 @@ async def get_created_laisee(session, wallet_config):
                 wlink = wallet_config.lnbits_url + "/withdraw/" + item['id']
                 wdate = dt.date.fromtimestamp(item['open_time'])
                 # expires in 3 months from wdate
-                from datetime import timedelta
                 delta = timedelta(days=90)
                 expiry = wdate + delta
                 expiry_date = expiry.strftime("%A %d. %B %Y")
