@@ -1,9 +1,9 @@
 Telethon==1.23.0
 pycoingecko==2.2.0
 PyYAML==5.4.1
-git+git://github.com/lightningames/pylnbits.git@main#egg=pylnbits
+git+https://github.com/lightningames/pylnbits.git@main#egg=pylnbits
 pyqrcode==1.2.1
 pypng==0.0.21
 Jinja2==2.11.3
 Pillow==9.0.1
-git+git://github.com/bitkarrot/supabase-py.git@develop#egg=supabase
+git+https://github.com/bitkarrot/supabase-py.git@develop#egg=supabase
